@@ -10,19 +10,19 @@
 
 	can_use(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 		if (!hasorgans(target))
-			return 0
+			return FALSE
 
 		var/obj/item/weapon/bionic/bionic = tool
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
 		if((affected.robotic < 2) && !bionic.allows_biological_host)
 			user << SPAN_WARNING("You can't install [bionic] into biological bodypart.")
-			return 0
+			return FALSE
 		if((affected.organ_tag != bionic.bionic_location) && !(affected.organ_tag in bionic.bionic_location))
 			user << SPAN_WARNING("[bionic] isn't created for [affected].")
-			return 0
+			return FALSE
 		if(affected.available_bionic_slots < affected.used_bionic_slots + bionic.used_slots)
 			user << SPAN_WARNING("There's not enough place in [affected] to install [bionic].")
-			return 0
+			return FALSE
 		return affected && affected.open >= 2
 
 	begin_step(mob/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
@@ -44,7 +44,7 @@
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
 
 		var/obj/item/weapon/bionic/bionic = tool
-		if(affected.available_bionic_slots > affected.used_bionic_slots + bionic.used_slots)
+		if(affected.available_bionic_slots >= affected.used_bionic_slots + bionic.used_slots)
 			bionic.install(user, target, affected)
 			user.visible_message(
 				"[user] installed [tool] into [target]'s [affected].",
