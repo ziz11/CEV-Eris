@@ -28,8 +28,8 @@
 /datum/surgery_step/external_implant/install/begin_step(mob/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 	var/obj/item/organ/external/affected = target.get_organ(target_zone)
 
-	user.visible_message("[user] trying to install [tool] to [target]'s [affected].", \
-	"You trying to install [tool] to [target]'s [affected]." )
+	user.visible_message("[user] are trying to install [tool] to [target]'s [affected].", \
+	"You are trying to install [tool] to [target]'s [affected]." )
 	..()
 
 

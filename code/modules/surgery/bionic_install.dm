@@ -1,8 +1,8 @@
-/datum/surgery_step/internal/install_module
+/datum/surgery_step/internal/install_bionic
 	priority = 3 // Before internal organs
 
 	allowed_tools = list(
-		/obj/item/organ_module = 100
+		/obj/item/weapon/bionic = 100
 	)
 
 	min_duration = 70
@@ -12,12 +12,18 @@
 		if (!hasorgans(target))
 			return 0
 
-		var/obj/item/organ_module/OM = tool
+		var/obj/item/weapon/bionic/bionic = tool
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
-		if(!affected.organ_tag in OM.allowed_organs)
-			user << SPAN_WARNING("[OM] isn't created for [affected].")
+		if((affected.robotic < 2) && !bionic.allows_biological_host)
+			user << SPAN_WARNING("You can't install [bionic] into biological bodypart.")
 			return 0
-		return affected && !affected.module && affected.open >= 2
+		if((affected.organ_tag != bionic.bionic_location) && !(affected.organ_tag in bionic.bionic_location))
+			user << SPAN_WARNING("[bionic] isn't created for [affected].")
+			return 0
+		if(affected.available_bionic_slots < affected.used_bionic_slots + bionic.used_slots)
+			user << SPAN_WARNING("There's not enough place in [affected] to install [bionic].")
+			return 0
+		return affected && affected.open >= 2
 
 	begin_step(mob/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 		if (!hasorgans(target))
@@ -37,15 +43,15 @@
 			return
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
 
-		user.visible_message(
-			"[user] installed [tool] into [target]'s [affected].",
-			"You installed [tool] into [target]'s [affected]."
-		)
-
-		if(!affected.module)
-			var/obj/item/organ_module/OM = tool
-			user.unEquip(OM, affected)
-			OM.install(affected)
+		var/obj/item/weapon/bionic/bionic = tool
+		if(affected.available_bionic_slots > affected.used_bionic_slots + bionic.used_slots)
+			bionic.install(user, target, affected)
+			user.visible_message(
+				"[user] installed [tool] into [target]'s [affected].",
+				"You installed [tool] into [target]'s [affected]."
+			)
+		else
+			user << SPAN_WARNING("You fail to install [tool]!")
 
 	fail_step(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
@@ -56,10 +62,10 @@
 		affected.createwound(CUT, 20)
 
 
-/datum/surgery_step/internal/module_removal
+/datum/surgery_step/internal/remove_bionic
 	priority = 3 // Before internal organs
 
-	requedQuality = QUALITY_RETRACTING
+	requedQuality = QUALITY_PRYING
 
 	min_duration = 60
 	max_duration = 80
@@ -70,7 +76,7 @@
 			return FALSE
 
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
-		if(!affected || !affected.module)
+		if(!affected || (affected.used_bionic_slots < 1))
 			return FALSE
 
 		for(var/obj/item/organ/internal/I in affected.internal_organs)
@@ -79,11 +85,12 @@
 
 		return TRUE
 
-	begin_step(mob/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
+	begin_step(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
+		affected.removing_bionic = input("Choose a bionic to remove", "Bionic Removal") as null|anything in affected.installed_bionics
 		user.visible_message(
-			"[user] starts removing [affected.module], from [target]'s [affected] with \the [tool].",
-			"You start removing [affected.module] from [target]'s [affected] with \the [tool]."
+			"[user] starts removing [affected.removing_bionic] from [target]'s [affected] with \the [tool].",
+			"You start removing [affected.removing_bionic] from [target]'s [affected] with \the [tool]."
 		)
 		target.custom_pain("Someone's ripping out your [affected]!",1)
 		..()
@@ -91,12 +98,12 @@
 	end_step(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
 		user.visible_message(
-			SPAN_NOTICE("[user] has removed [affected.module] from [target]'s [affected]."),
-			SPAN_NOTICE("You have removed [affected.module] from [target]'s [affected].")
+			SPAN_NOTICE("[user] has removed [affected.removing_bionic] from [target]'s [affected]."),
+			SPAN_NOTICE("You have removed [affected.removing_bionic] from [target]'s [affected].")
 		)
 
-		var/obj/item/organ_module/OM = affected.module
-		OM.remove(affected)
+		affected.removing_bionic.remove(user, target, affected)
+		affected.removing_bionic = null
 
 	fail_step(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 		var/obj/item/organ/external/affected = target.get_organ(target_zone)
@@ -105,4 +112,4 @@
 			SPAN_WARNING("Your hand slips, damaging the flesh in [target]'s [affected.name] with \the [tool]!")
 		)
 		affected.createwound(BRUISE, 20)
-
+		affected.removing_bionic = null

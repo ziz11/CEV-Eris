@@ -74,6 +74,12 @@
 	var/stage = 0
 	var/cavity = 0
 
+	// Bionic vars.
+	var/available_bionic_slots = 2
+	var/used_bionic_slots = 0
+	var/list/installed_bionics = list()
+	var/obj/item/weapon/bionic/removing_bionic
+
 /obj/item/organ/external/New(var/mob/living/carbon/holder,var/datum/organ_description/OD)
 	..(holder)
 	if(owner)
