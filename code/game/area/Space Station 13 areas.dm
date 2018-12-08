@@ -28,7 +28,7 @@ NOTE: there are two lists of areas in the end of this file: centcom and station 
 	var/lightswitch = 1
 
 	var/eject = null
-
+	var/is_maintenance = FALSE
 	var/debug = 0
 	var/requires_power = 1
 	var/always_unpowered = 0	//this gets overriden to 1 for space in area/New()
@@ -656,6 +656,7 @@ area/space/atmosalert()
 //Maintenance
 
 /area/maintenance
+	is_maintenance = TRUE
 	flags = AREA_FLAG_RAD_SHIELDED
 	sound_env = TUNNEL_ENCLOSED
 	turf_initializer = new /datum/turf_initializer/maintenance()
@@ -1843,6 +1844,7 @@ area/space/atmosalert()
 /area/eris/security/disposal
 	name = "Security Disposal"
 	icon_state = "hammerblue"
+	is_maintenance = TRUE
 
 /area/eris/security/barracks
 	name = "Ironhammer Barracks"
@@ -1871,6 +1873,7 @@ area/space/atmosalert()
 /area/eris/security/maintpost
 	name = "Maintenance Post"
 	icon_state = "hammerred"
+	is_maintenance = TRUE
 
 //Eris Engineering
 
@@ -1917,6 +1920,7 @@ area/space/atmosalert()
 	icon_state = "substation"
 	forced_ambience = list('sound/ambience/maintambience.ogg')
 	sound_env = SMALL_ENCLOSED
+	is_maintenance = TRUE
 
 /area/eris/engineering/substation/engineering
 	name = "Engineering Substation"
@@ -1939,6 +1943,7 @@ area/space/atmosalert()
 //Eris Maint
 
 /area/eris/maintenance
+	is_maintenance = TRUE
 	name = "Maintenance"
 	icon_state = "erisyellow"
 	forced_ambience = list('sound/ambience/maintambience.ogg')
@@ -2204,6 +2209,7 @@ area/space/atmosalert()
 
 /area/constructionsite
 	name = "\improper Construction Site"
+	is_maintenance = TRUE
 	icon_state = "storage"
 
 /area/constructionsite/storage
@@ -2264,6 +2270,7 @@ area/space/atmosalert()
 
 /area/construction
 	name = "\improper Engineering Construction Area"
+	is_maintenance = TRUE
 	icon_state = "yellow"
 
 /area/construction/supplyshuttle
