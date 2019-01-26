@@ -17,6 +17,9 @@
 #define isnewplayer(A) istype(A, /mob/new_player)
 
 #define isbst(A) istype(A, /mob/living/carbon/human/bst)
+
+#define isclient(A) istype(A, /client)
+
 //++++++++++++++++++++++++++++++++++++++++++++++
 
 #define isliving(A) istype(A, /mob/living)

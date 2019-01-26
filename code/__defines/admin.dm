@@ -34,3 +34,7 @@
 #define R_HOST 0x7F // Used for debug/mock only
 
 #define R_MAXPERMISSION 0x40 // This holds the maximum value for a permission. It is used in iteration, so keep it updated.
+
+#define TICKET_CLOSED 0   // Ticket has been resolved or declined
+#define TICKET_OPEN     1 // Ticket has been created, but not responded to
+#define TICKET_ASSIGNED 2 // An admin has assigned themself to the ticket and will respond
