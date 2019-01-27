@@ -806,6 +806,14 @@
 		sleep(2)
 		C.jumptocoord(x,y,z)
 
+	else if(href_list["take_ticket"])
+		var/datum/ticket/ticket = locate(href_list["take_ticket"])
+
+		if(isnull(ticket))
+			return
+
+		ticket.take(client_repository.get_lite_client(usr.client))
+
 	else if(href_list["adminchecklaws"])
 		output_ai_laws()
 

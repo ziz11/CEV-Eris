@@ -49,6 +49,13 @@
 		cmd_admin_irc_pm(href_list["irc_msg"])
 		return
 
+	if(href_list["close_ticket"])
+		var/datum/ticket/ticket = locate(href_list["close_ticket"])
+
+		if(isnull(ticket))
+			return
+
+		ticket.close(client_repository.get_lite_client(usr.client))
 
 
 	//Logs all hrefs
