@@ -59,6 +59,39 @@ var/list/ticket_panels = list()
 
 	return 1
 
+//Centralised proc to send a message to a ticket, and all admins watching it
+//This should only be called for tickets which are assigned to at least one person
+/datum/ticket/proc/message(var/client/sender, var/client/reciever, var/msg = null)
+	msgs += new /datum/ticket_msg(sender.ckey, reciever, msg)
+	for(var/datum/client_lite/admin in assigned_admins)
+		var/client/C = client_by_ckey(admin.ckey)
+		if(C)
+			var/receiver_message = "<span class='pm'><span class='in'>" + create_text_tag("pm_in", "", C) + " <b>\[Player PM\]</b> <span class='name'>[get_options_bar(src, C.holder ? 1 : 0, C.holder ? 1 : 0, 1)]</span>"
+			if(C.holder)
+				receiver_message += " (<a href='?src=\ref[usr];close_ticket=\ref[src]'>CLOSE</a>)"
+				receiver_message += ": <span class='message'>[generate_ahelp_key_words(C.mob, msg)]</span>"
+			else
+				receiver_message += ": <span class='message'>[msg]</span>"
+			receiver_message += "</span></span>"
+			to_chat(C, receiver_message)
+
+			if(C.get_preference_value(/datum/client_preference/staff/play_adminhelp_ping) == GLOB.PREF_HEAR)
+				sound_to(C, 'sound/effects/adminhelp.ogg')
+
+	var/sender_message = "<span class='pm'><span class='out'>" + create_text_tag("pm_out_alt", "PM", sender) + " to <span class='name'>[get_options_bar(reciever, sender.holder ? 1 : 0, holder ? 1 : 0, 1)]</span>"
+	if(holder)
+		sender_message += " (<a href='?_src_=holder;take_ticket=\ref[ticket]'>[(ticket.status == TICKET_OPEN) ? "TAKE" : "JOIN"]</a>) (<a href='?src=\ref[usr];close_ticket=\ref[ticket]'>CLOSE</a>)"
+		sender_message += ": <span class='message'>[generate_ahelp_key_words(mob, msg)]</span>"
+	else
+		sender_message += ": <span class='message'>[msg]</span>"
+	sender_message += "</span></span>"
+	to_chat(src, sender_message)
+
+
+
+
+
+
 /datum/ticket/proc/assigned_admin_ckeys()
 	. = list()
 
