@@ -1448,24 +1448,52 @@ mob/living/carbon/human/can_centcom_reply()
 mob/living/silicon/ai/can_centcom_reply()
 	return common_radio != null && !check_unable(2)
 
-/atom/proc/extra_admin_link()
-	return
+/datum/proc/extra_admin_link(var/prefix, var/sufix, var/short_links)
+	return list()
 
-/mob/extra_admin_link(var/source)
+/atom/movable/extra_admin_link(var/source, var/prefix, var/sufix, var/short_links)
+	return list("<A HREF='?[source];adminplayerobservefollow=\ref[src]'>[prefix][short_links ? "J" : "JMP"][sufix]</A>")
+
+/client/proc/extra_admin_link(source, var/prefix, var/sufix, var/short_links)
+	return mob ? mob.extra_admin_link(source, prefix, sufix, short_links) : list()
+
+/mob/extra_admin_link(var/source, var/prefix, var/sufix, var/short_links)
+	. = ..()
 	if(client && eyeobj)
-		return "|<A HREF='?[source];adminplayerobservejump=\ref[eyeobj]'>EYE</A>"
+		. += "<A HREF='?[source];adminplayerobservefollow=\ref[eyeobj]'>[prefix][short_links ? "E" : "EYE"][sufix]</A>"
 
-/mob/observer/ghost/extra_admin_link(var/source)
-	if(mind && mind.current)
-		return "|<A HREF='?[source];adminplayerobservejump=\ref[mind.current]'>BDY</A>"
+/mob/observer/ghost/extra_admin_link(var/source, var/prefix, var/sufix, var/short_links)
+	. = ..()
+	if(mind && (mind.current && !isghost(mind.current)))
+		. += "<A HREF='?[source];adminplayerobservefollow=\ref[mind.current]'>[prefix][short_links ? "B" : "BDY"][sufix]</A>"
 
-/proc/admin_jump_link(var/atom/target, var/source)
-	if(!target) return
+/proc/admin_jump_link(var/target, var/source, var/delimiter = "|", var/prefix, var/sufix, var/short_links)
+	var/link = ""
+
 	// The way admin jump links handle their src is weirdly inconsistent...
+
 	if(istype(source, /datum/admins))
 		source = "src=\ref[source]"
 	else
 		source = "_src_=holder"
 
-	. = "<A HREF='?[source];adminplayerobservejump=\ref[target]'>JMP</A>"
-	. += target.extra_admin_link(source)
+	if(istype(target, /datum))
+		var/datum/D = target
+		link = D.extra_admin_link(source, prefix, sufix, short_links)
+	else if (istype(target, /client))
+		var/client/C = target
+		link = C.extra_admin_link(source, prefix, sufix, short_links)
+	else
+		CRASH("Invalid admin jump link target: [log_info_line(target)]")
+	return jointext(link, delimiter)
+
+/datum/proc/get_admin_jump_link(var/atom/target)
+	return
+
+/mob/get_admin_jump_link(var/atom/target, var/delimiter, var/prefix, var/sufix)
+	return client && client.get_admin_jump_link(target, delimiter, prefix, sufix)
+
+/client/proc/get_admin_jump_link(var/atom/target, var/delimiter, var/prefix, var/sufix)
+	if(holder)
+		var/short_links = get_preference_value(/datum/client_preference/ghost_follow_link_length) == GLOB.PREF_SHORT
+		return admin_jump_link(target, src, delimiter, prefix, sufix, short_links)
