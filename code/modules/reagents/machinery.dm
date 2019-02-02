@@ -89,7 +89,7 @@
 	data["energy"] = round(energy)
 	data["maxEnergy"] = round(max_energy)
 	data["isBeakerLoaded"] = beaker ? 1 : 0
-	data[MATERIAL_GLASS] = accept_glass
+	data["glass"] = accept_glass
 	var beakerContents[0]
 	var beakerCurrentVolume = 0
 	if(beaker && beaker:reagents && beaker:reagents.reagent_list.len)
@@ -116,7 +116,7 @@
 	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
 	if (!ui)
 		// the ui does not exist, so we'll create a new() one
-        // for a list of parameters and their descriptions see the code docs in \code\modules\nano\nanoui.dm
+		// for a list of parameters and their descriptions see the code docs in \code\modules\nano\nanoui.dm
 		ui = new(user, src, ui_key, "chem_disp.tmpl", ui_title, 390, 655)
 		// when the ui is first opened this is the data it will use
 		ui.set_initial_data(data)
@@ -148,7 +148,7 @@
 	if(href_list["ejectBeaker"])
 		if(beaker)
 			var/obj/item/weapon/reagent_containers/B = beaker
-			B.loc = loc
+			B.forceMove(loc)
 			beaker = null
 
 	add_fingerprint(usr)
@@ -295,9 +295,7 @@
 				qdel(src)
 
 /obj/machinery/chem_master/attackby(var/obj/item/weapon/B as obj, var/mob/user as mob)
-
 	if(istype(B, /obj/item/weapon/reagent_containers/glass))
-
 		if(src.beaker)
 			user << "A beaker is already loaded into the machine."
 			return
@@ -309,17 +307,14 @@
 			icon_state = "mixer1"
 
 	else if(istype(B, /obj/item/weapon/storage/pill_bottle))
-
 		if(src.loaded_pill_bottle)
 			user << "A pill bottle is already loaded into the machine."
 			return
 
-
-		if (usr.unEquip(B, src))
+		if (user.unEquip(B, src))
 			src.loaded_pill_bottle = B
 			user << "You add the pill bottle into the dispenser slot!"
 			src.updateUsrDialog()
-	return
 
 /obj/machinery/chem_master/Topic(href, href_list)
 	if(..())
@@ -327,8 +322,9 @@
 
 	if (href_list["ejectp"])
 		if(loaded_pill_bottle)
-			loaded_pill_bottle.loc = src.loc
+			loaded_pill_bottle.forceMove(src.loc)
 			loaded_pill_bottle = null
+
 	else if(href_list["close"])
 		usr << browse(null, "window=chemmaster")
 		usr.unset_machine()
@@ -348,11 +344,31 @@
 					var/A = G.name
 					var/B = G.data["blood_type"]
 					var/C = G.data["blood_DNA"]
-					dat += "<TITLE>Chemmaster 3000</TITLE>Chemical infos:<BR><BR>Name:<BR>[A]<BR><BR>Description:<BR>Blood Type: [B]<br>DNA: [C]<BR><BR><BR><A href='?src=\ref[src];main=1'>(Back)</A>"
+					dat += {"
+						<TITLE>Chemmaster 3000</TITLE>
+						Chemical infos:<BR><BR>
+						Name:<BR>[A]<BR><BR>
+						Description:<BR>
+						Blood Type: [B]<br>
+						DNA: [C]<BR><BR><BR>
+						<A href='?src=\ref[src];main=1'>(Back)</A>
+					"}
 				else
-					dat += "<TITLE>Chemmaster 3000</TITLE>Chemical infos:<BR><BR>Name:<BR>[href_list["name"]]<BR><BR>Description:<BR>[href_list["desc"]]<BR><BR><BR><A href='?src=\ref[src];main=1'>(Back)</A>"
+					dat += {"
+						<TITLE>Chemmaster 3000</TITLE>
+						Chemical infos:<BR><BR>
+						Name:<BR>[href_list["name"]]<BR><BR>
+						Description:<BR>[href_list["desc"]]<BR><BR><BR>
+						<A href='?src=\ref[src];main=1'>(Back)</A>
+					"}
 			else
-				dat += "<TITLE>Condimaster 3000</TITLE>Condiment infos:<BR><BR>Name:<BR>[href_list["name"]]<BR><BR>Description:<BR>[href_list["desc"]]<BR><BR><BR><A href='?src=\ref[src];main=1'>(Back)</A>"
+				dat += {"
+					<TITLE>Condimaster 3000</TITLE>
+					Condiment infos:<BR><BR>
+					Name:<BR>[href_list["name"]]<BR><BR>
+					Description:<BR>[href_list["desc"]]<BR><BR><BR>
+					<A href='?src=\ref[src];main=1'>(Back)</A>
+				"}
 			usr << browse(dat, "window=chem_master;size=575x400")
 			return
 
@@ -365,7 +381,7 @@
 					usr << SPAN_WARNING("The [name] is full!")
 
 		else if (href_list["addcustom"])
-			useramount = input("Select the amount to transfer.", 30, useramount) as num
+			useramount = input("Select the amount to transfer.", "Amount to transfer", useramount) as null|num
 			src.Topic(null, list("amount" = "[useramount]", "add" = href_list["addcustom"]))
 
 		else if (href_list["remove"])
@@ -381,7 +397,7 @@
 
 
 		else if (href_list["removecustom"])
-			useramount = input("Select the amount to transfer.", 30, useramount) as num
+			useramount = input("Select the amount to transfer.", "Amount to transfer", useramount) as "Amount to transfer"|num
 			src.Topic(null, list("amount" = "[useramount]", "remove" = href_list["removecustom"]))
 
 		else if (href_list["toggle"])
@@ -396,6 +412,7 @@
 				beaker = null
 				reagents.clear_reagents()
 				icon_state = "mixer0"
+
 		else if (href_list["createpill"] || href_list["createpill_multiple"])
 			var/count = 1
 
@@ -403,7 +420,9 @@
 				return
 
 			if (href_list["createpill_multiple"])
-				count = input("Select the number of pills to make.", "Max [max_pill_count]", pillamount) as num
+				count = input("Select the number of pills to make.", "Max [max_pill_count]", pillamount) as null|num
+				if(!count)
+					return
 				count = Clamp(count, 1, max_pill_count)
 
 			if(reagents.total_volume/count < 1) //Sanity checking.
@@ -412,36 +431,38 @@
 			var/amount_per_pill = reagents.total_volume/count
 			if (amount_per_pill > 60) amount_per_pill = 60
 
-			var/name = sanitizeSafe(input(usr,"Name:","Name your pill!","[reagents.get_master_reagent_name()] ([amount_per_pill] units)"), MAX_NAME_LEN)
+			var/name = sanitizeSafe(input(usr,"Name:","Name your pill!","[reagents.get_master_reagent_name()] ([amount_per_pill] units)") as null|text, MAX_NAME_LEN)
+
+			if(!src.Adjacent(usr))
+				usr.unset_machine()
+				return
 
 			if(reagents.total_volume/count < 1) //Sanity checking.
 				return
 			while (count--)
-				var/obj/item/weapon/reagent_containers/pill/P = new/obj/item/weapon/reagent_containers/pill(src.loc)
+				var/obj/item/weapon/reagent_containers/pill/P = new (src.loc)
 				if(!name) name = reagents.get_master_reagent_name()
 				P.name = "[name] pill"
-				P.pixel_x = rand(-7, 7) //random position
-				P.pixel_y = rand(-7, 7)
 				P.icon_state = "pill"+pillsprite
 				reagents.trans_to_obj(P,amount_per_pill)
 				if(src.loaded_pill_bottle)
 					if(loaded_pill_bottle.contents.len < loaded_pill_bottle.storage_slots)
-						P.loc = loaded_pill_bottle
+						P.forceMove(loaded_pill_bottle)
 						src.updateUsrDialog()
 
 		else if (href_list["createbottle"])
 			if(!condi)
-				var/name = sanitizeSafe(input(usr,"Name:","Name your bottle!",reagents.get_master_reagent_name()), MAX_NAME_LEN)
-				var/obj/item/weapon/reagent_containers/glass/bottle/P = new/obj/item/weapon/reagent_containers/glass/bottle(src.loc)
-				if(!name) name = reagents.get_master_reagent_name()
+				var/name = sanitizeSafe(input(usr,"Name:","Name your bottle!",reagents.get_master_reagent_name()) as null|text, MAX_NAME_LEN)
+				if(!name || !src.Adjacent(usr))
+					usr.unset_machine()
+					return
+				var/obj/item/weapon/reagent_containers/glass/bottle/P = new (src.loc)
 				P.name = "[name] bottle"
-				P.pixel_x = rand(-7, 7) //random position
-				P.pixel_y = rand(-7, 7)
 				P.icon_state = bottlesprite
 				reagents.trans_to_obj(P,60)
 				P.update_icon()
 			else
-				var/obj/item/weapon/reagent_containers/food/condiment/P = new/obj/item/weapon/reagent_containers/food/condiment(src.loc)
+				var/obj/item/weapon/reagent_containers/food/condiment/P = new (src.loc)
 				reagents.trans_to_obj(P,50)
 		else if(href_list["change_pill"])
 			#define MAX_PILL_SPRITE 20 //max icon state of the pill sprites
