@@ -14,6 +14,9 @@
 	dir = SOUTH
 	layer = BELOW_MOB_LAYER
 	organ_tag = "limb"
+
+	matter = list(MATERIAL_BIOMATTER = 15)
+
 	var/icon_name = null
 	var/tally = 0
 

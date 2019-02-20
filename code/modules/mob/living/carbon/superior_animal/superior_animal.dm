@@ -128,8 +128,6 @@
 	else if (icon_living)
 		icon_state = icon_living
 
-
-
 /mob/living/carbon/superior_animal/regenerate_icons()
 	. = ..()
 	update_icons()

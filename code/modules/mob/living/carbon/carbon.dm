@@ -421,3 +421,25 @@
 
 /mob/living/carbon/proc/has_appendage(var/limb_check)
 	return 0
+
+/mob/living/carbon/harvest(var/mob/user, var/clean = FALSE)
+	for(var/obj/item/organ/I in internal_organs)
+		I.removed()
+		I.forceMove(src)
+
+	for(var/obj/item/I in src)
+		remove_from_mob(I)
+
+	if(issmall(src))
+		if(user)
+			user.visible_message(SPAN_DANGER("[user] chops up \the [src]!"))
+		if(!clean)
+			new/obj/effect/decal/cleanable/blood/splatter(get_turf(src))
+		qdel(src)
+	else
+		if(user)
+			user.visible_message(SPAN_DANGER("[user] butchers \the [src] messily!"))
+		if(clean)
+			qdel(src)
+		else
+			gib()

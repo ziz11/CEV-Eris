@@ -334,19 +334,25 @@
 	return 1
 
 // Harvest an animal's delicious byproducts
-/mob/living/simple_animal/proc/harvest(var/mob/user)
+/mob/living/simple_animal/harvest(var/mob/user, var/clean = FALSE)
 	var/actual_meat_amount = max(1,(meat_amount/2))
 	if(meat_type && actual_meat_amount>0 && (stat == DEAD))
 		for(var/i=0;i<actual_meat_amount;i++)
 			var/obj/item/meat = new meat_type(get_turf(src))
 			meat.name = "[src.name] [meat.name]"
 		if(issmall(src))
-			user.visible_message(SPAN_DANGER("[user] chops up \the [src]!"))
-			new/obj/effect/decal/cleanable/blood/splatter(get_turf(src))
+			if(user)
+				user.visible_message(SPAN_DANGER("[user] chops up \the [src]!"))
+			if(!clean)
+				new/obj/effect/decal/cleanable/blood/splatter(get_turf(src))
 			qdel(src)
 		else
-			user.visible_message(SPAN_DANGER("[user] butchers \the [src] messily!"))
-			gib()
+			if(user)
+				user.visible_message(SPAN_DANGER("[user] butchers \the [src] messily!"))
+			if(clean)
+				qdel(src)
+			else
+				gib()
 
 //For picking up small animals
 /mob/living/simple_animal/MouseDrop(atom/over_object)

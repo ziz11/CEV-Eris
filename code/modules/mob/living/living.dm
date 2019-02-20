@@ -874,3 +874,7 @@ default behaviour is:
 		if(A)
 			A.static_overlays |= static_overlay
 			A.client.images |= static_overlay
+
+
+/mob/living/proc/harvest(var/mob/user, var/clean = FALSE)
+	return

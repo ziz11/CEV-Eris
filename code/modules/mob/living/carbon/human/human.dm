@@ -1505,3 +1505,12 @@ var/list/rank_prefix = list(\
 			return FALSE
 	else
 		return TRUE
+
+/mob/living/carbon/human/harvest(var/mob/user, var/clean = FALSE)
+	for(var/obj/item/organ/external/E in src.organs)
+		E.removed()
+		E.forceMove(src)
+		for(var/obj/item/organ/external/C in E)
+			E.removed()
+			E.forceMove(src)
+	..()

@@ -2,6 +2,7 @@
 	name = "organ"
 	icon = 'icons/obj/surgery.dmi'
 	germ_level = 0
+	matter = list(MATERIAL_BIOMATTER = 8)
 
 	// Strings.
 	var/organ_tag = "organ"           // Unique identifier.

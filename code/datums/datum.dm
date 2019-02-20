@@ -31,3 +31,6 @@
 /datum/proc/Process()
 	set waitfor = 0
 	return PROCESS_KILL
+
+/datum/proc/check_eye(user as mob)
+	return -1

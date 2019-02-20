@@ -1,0 +1,44 @@
+<div class="item">
+  <h2>Status:</h2>
+</div>
+<div class="statusDisplay" style="height: 100px; overflow: auto;">
+	<div class="item">
+		<div class="itemLabel">
+			{{if data.enabled}}
+				{{if data.working}}
+					<span class='highlight'>Processing...</span>
+				{{else}}
+					<span style='color: #706e6e;'>Idle...</span>
+				{{/if}}
+			{{else}}
+				<span class='bad'>Off</span>
+			{{/if}}
+		</div>
+		<div class='item'>
+			<div class="itemLabel">
+				<span class='good'>Biomatter:</span>
+			</div>
+			<div class="itemContent">
+				{{:helper.displayBar(data.biomatter, 0, 1000, 'good', data.biomatter)}}
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="item">
+  <h2>Controls:</h2>
+</div>
+<div class='item'>
+	<div class="itemLabel">
+    	Power: 
+    </div>
+	<div class="itemContent">
+		{{:helper.link('On', 'power', {'switchOn' : 1}, data.enabled ? 'selected' : null)}}{{:helper.link('Off', 'close', {'switchOff' : 1}, data.enabled ? null : 'selected')}}
+    </div>
+    <div class="itemLabel">
+    	Transfer to canister:
+    </div>
+    <div class="itemContent">
+    	{{:helper.link('On', 'power', {'injectingOn' : 1}, data.injecting ? 'selected' : null)}}{{:helper.link('Off', 'close', {'injectingOff' : 1}, data.injecting ? null : 'selected')}}
+    </div>
+</div>

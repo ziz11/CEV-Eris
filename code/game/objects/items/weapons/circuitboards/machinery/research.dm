@@ -75,11 +75,22 @@
 		/obj/item/weapon/stock_parts/console_screen = 1
 	)
 
-obj/item/weapon/circuitboard/ntnet_relay
+/obj/item/weapon/circuitboard/ntnet_relay
 	name = "Circuit board (NTNet Quantum Relay)"
 	build_path = /obj/machinery/ntnet_relay
 	board_type = "machine"
 	origin_tech = list(TECH_DATA = 4)
 	req_components = list(
 		/obj/item/stack/cable_coil = 15
+	)
+
+/obj/item/weapon/circuitboard/sorter
+	name = T_BOARD("sorter")
+	build_path = /obj/machinery/sorter
+	board_type = "machine"
+	origin_tech = list(TECH_MAGNET = 2, TECH_ENGINEERING = 2, TECH_DATA = 2)
+	req_components = list(
+		/obj/item/weapon/stock_parts/manipulator = 2,
+		/obj/item/weapon/stock_parts/scanning_module = 1,
+		/obj/item/weapon/stock_parts/console_screen = 1
 	)
