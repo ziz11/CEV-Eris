@@ -5,7 +5,7 @@
 	icon_state = "cart"
 	anchored = 0
 	density = 1
-	flags = OPENCONTAINER
+	reagent_flags = OPENCONTAINER
 	climbable = TRUE
 	//copypaste sorry
 	var/amount_per_transfer_from_this = 5 //shit I dunno, adding this so syringes stop runtime erroring. --NeoFite
@@ -301,7 +301,7 @@
 	icon_state = "pussywagon"
 	anchored = 1
 	density = 0
-	flags = OPENCONTAINER
+	reagent_flags = OPENCONTAINER
 	//copypaste sorry
 	var/amount_per_transfer_from_this = 5 //shit I dunno, adding this so syringes stop runtime erroring. --NeoFite
 	var/obj/item/weapon/storage/bag/trash/mybag	= null
@@ -318,7 +318,6 @@
 	if(!..(user, 1))
 		return
 
-	user << "\icon[src] This [callme] contains [reagents.total_volume] unit\s of water!"
 	if(mybag)
 		user << "\A [mybag] is hanging on the [callme]."
 
