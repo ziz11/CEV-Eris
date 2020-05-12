@@ -5,21 +5,19 @@
 	starts_unlocked = TRUE
 
 /datum/design/research/item/mechfab/prosthesis/r_arm
-	name = "right arm"
-	build_path = /obj/item/prosthesis/r_arm
+	build_path = /obj/item/organ/external/robotic/r_arm
 
 /datum/design/research/item/mechfab/prosthesis/l_arm
-	name = "left arm"
-	build_path = /obj/item/prosthesis/l_arm
+	build_path = /obj/item/organ/external/robotic/l_arm
 
 /datum/design/research/item/mechfab/prosthesis/r_leg
-	name = "right leg"
-	build_path = /obj/item/prosthesis/r_leg
+	build_path = /obj/item/organ/external/robotic/r_leg
 
 /datum/design/research/item/mechfab/prosthesis/l_leg
-	name = "left leg"
-	build_path = /obj/item/prosthesis/l_leg
+	build_path = /obj/item/organ/external/robotic/l_leg
 
+/datum/design/research/item/mechfab/prosthesis/groin
+	build_path = /obj/item/organ/external/robotic/groin
 
 //Modules ====================================
 
@@ -40,11 +38,11 @@
 
 
 /datum/design/research/item/mechfab/modules/multitool/surgical
-	build_path = /obj/item/organ_module/active/multitool/surgical
+	build_path = /obj/item/organ_module/active/simple/surgical
 	name = "Embedded surgical multitool"
 
 /datum/design/research/item/mechfab/modules/multitool/engineer
-	build_path = /obj/item/organ_module/active/multitool/engineer
+	build_path = /obj/item/organ_module/active/simple/engineer
 	name = "Embedded Technomancer multitool"
 
 /datum/design/research/item/mechfab/modules/multitool/miner

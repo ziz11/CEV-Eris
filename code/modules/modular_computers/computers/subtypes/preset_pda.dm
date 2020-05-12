@@ -1,15 +1,16 @@
 /obj/item/modular_computer/pda/install_default_hardware()
 	..()
-
-	network_card = new /obj/item/weapon/computer_hardware/network_card/(src)
-	hard_drive = new /obj/item/weapon/computer_hardware/hard_drive/small(src)
-	processor_unit = new /obj/item/weapon/computer_hardware/processor_unit/small(src)
+	network_card = new network_card_type(src)
+	hard_drive = new hard_drive_type(src)
+	processor_unit = new processor_unit_type(src)
 	card_slot = new /obj/item/weapon/computer_hardware/card_slot(src)
 	cell = new /obj/item/weapon/cell/small/moebius/pda(src)
-	gps_sensor	= new /obj/item/weapon/computer_hardware/gps_sensor(src)
+	gps_sensor= new /obj/item/weapon/computer_hardware/gps_sensor(src)
 	led = new /obj/item/weapon/computer_hardware/led(src)
 	if(scanner_type)
 		scanner = new scanner_type(src)
+	if(tesla_link_type)
+		tesla_link = new tesla_link_type(src)
 
 
 /obj/item/modular_computer/pda/install_default_programs()
@@ -37,14 +38,14 @@
 	icon_state = "pda-s"
 	scanner_type = /obj/item/weapon/computer_hardware/scanner/reagent
 
+
+/obj/item/modular_computer/pda/moebius
+	hard_drive_type = /obj/item/weapon/computer_hardware/hard_drive/small/adv
+
 /obj/item/modular_computer/pda/moebius/install_default_programs()
 	..()
-	hard_drive.store_file(new /datum/computer_file/program/chem_catalog())
-	
-/obj/item/modular_computer/pda/moebius/install_default_hardware()
-	..()
-	qdel(hard_drive)
-	hard_drive = new /obj/item/weapon/computer_hardware/hard_drive(src)
+	hard_drive.store_file(new /datum/computer_file/program/signaller)
+	hard_drive.store_file(new /datum/computer_file/program/chem_catalog)
 
 /obj/item/modular_computer/pda/moebius/science
 	icon_state = "pda-nt"
@@ -58,12 +59,21 @@
 	icon_state = "pda-m"
 	scanner_type = /obj/item/weapon/computer_hardware/scanner/reagent
 
+/obj/item/modular_computer/pda/moebius/roboticist
+	icon_state = "pda-robot"
+
+
 /obj/item/modular_computer/pda/church
 	icon_state = "pda-neo"
+
 
 /obj/item/modular_computer/pda/heads
 	name = "command PDA"
 	icon_state = "pda-h"
+	hard_drive_type = /obj/item/weapon/computer_hardware/hard_drive/small/adv
+	processor_unit_type = /obj/item/weapon/computer_hardware/processor_unit/adv/small
+	network_card_type = /obj/item/weapon/computer_hardware/network_card/advanced
+	tesla_link_type = /obj/item/weapon/computer_hardware/tesla_link
 	scanner_type = /obj/item/weapon/computer_hardware/scanner/paper
 
 /obj/item/modular_computer/pda/heads/hop
@@ -82,16 +92,28 @@
 	icon_state = "pda-cmo"
 	scanner_type = /obj/item/weapon/computer_hardware/scanner/medical
 
+/obj/item/modular_computer/pda/heads/cmo/install_default_programs()
+	..()
+	hard_drive.store_file(new /datum/computer_file/program/chem_catalog())
+
 /obj/item/modular_computer/pda/heads/rd
 	icon_state = "pda-rd"
 	scanner_type = /obj/item/weapon/computer_hardware/scanner/reagent
 
 /obj/item/modular_computer/pda/captain
 	icon_state = "pda-c"
+	hard_drive_type = /obj/item/weapon/computer_hardware/hard_drive/small/adv
+	processor_unit_type = /obj/item/weapon/computer_hardware/processor_unit/adv/small
+	network_card_type = /obj/item/weapon/computer_hardware/network_card/advanced
+	tesla_link_type = /obj/item/weapon/computer_hardware/tesla_link
 	scanner_type = /obj/item/weapon/computer_hardware/scanner/paper
 
 /obj/item/modular_computer/pda/ert
 	icon_state = "pda-h"
+	hard_drive_type = /obj/item/weapon/computer_hardware/hard_drive/small/adv
+	processor_unit_type = /obj/item/weapon/computer_hardware/processor_unit/adv/small
+	network_card_type = /obj/item/weapon/computer_hardware/network_card/advanced
+	tesla_link_type = /obj/item/weapon/computer_hardware/tesla_link
 
 /obj/item/modular_computer/pda/cargo
 	icon_state = "pda-sup"
@@ -99,9 +121,10 @@
 
 /obj/item/modular_computer/pda/syndicate
 	icon_state = "pda-syn"
-
-/obj/item/modular_computer/pda/roboticist
-	icon_state = "pda-robot"
+	hard_drive_type = /obj/item/weapon/computer_hardware/hard_drive/small/adv
+	processor_unit_type = /obj/item/weapon/computer_hardware/processor_unit/adv/small
+	network_card_type = /obj/item/weapon/computer_hardware/network_card/advanced
+	tesla_link_type = /obj/item/weapon/computer_hardware/tesla_link
 
 /obj/item/modular_computer/pda/club_worker
 	icon_state = "pda-club"
@@ -118,9 +141,7 @@
 	icon = 'icons/obj/pda.dmi'
 	icon_state = "pdabox"
 
-/obj/item/weapon/storage/box/PDAs/Initialize()
-	. = ..()
-
+/obj/item/weapon/storage/box/PDAs/populate_contents()
 	new /obj/item/modular_computer/pda(src)
 	new /obj/item/modular_computer/pda(src)
 	new /obj/item/modular_computer/pda(src)

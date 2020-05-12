@@ -22,18 +22,23 @@
 <center><h3>RULES ({{:data.current_rule_num}}/{{:data.max_rule_num}})</h3></center>
 <hr>
 </hr>
-
-{{for data.rules}}
-	<div class="item">
-		{{if value.accept}}
-			Accept 
-		{{else}}
-			Refuse 
-		{{/if}}
-		the {{:value.sort_type}}: {{:value.amount}} amount of {{:value.value}}
-		{{:helper.link('Remove', 'angle-up', {'remove' : index+1})}}
-	</div>
-{{/for}}
+{{if data.rules.length}}
+	{{for data.rules}}
+		<div class="item">
+			{{if value.accept}}
+				Accept 
+			{{else}}
+				Refuse 
+			{{/if}}
+			the {{:value.sort_type}}: 
+			{{if value.amount && value.sort_type != "name"}}
+				{{:value.amount}} amount of 
+			{{/if}}
+			{{:value.value}}
+			{{:helper.link('Remove', 'angle-up', {'remove' : index+1})}}
+		</div>
+	{{/for}}
+{{/if}}
 
 <hr>
 </hr>
@@ -42,13 +47,14 @@
 	<center><h4>RULE MANAGER</h4></center>
 	<div class="itemLabel"> Sort how: </div>
 	<div class="itemContent">
-		{{:helper.link('Accept', null, {'filter' : 1}, data.new_rule_accept == 1 ? 'disabled' : null)}}
-		{{:helper.link('Refuse', null, {'filter' : 0}, data.new_rule_accept == 0 ? 'disabled' : null)}}
+		{{:helper.link('Accept', null, {'filter' : 1}, data.new_rule_accept == 1 ? 'selected' : null)}}
+		{{:helper.link('Refuse', null, {'filter' : 0}, data.new_rule_accept == 0 ? 'selected' : null)}}
 	</div>
 	<div class="itemLabel"> Sort by: </div>
 	<div class="itemContent">
-		{{:helper.link('Material', null, {'sort_type' : "material"}, data.new_rule_sort == "material" ? 'disabled' : null)}}
-		{{:helper.link('Reagent', null, {'sort_type' : "reagent"}, data.new_rule_sort == "reagent" ? 'disabled' : null)}}
+		{{:helper.link('Material', null, {'sort_type' : "material"}, data.new_rule_sort == "material" ? 'selected' : null)}}
+		{{:helper.link('Reagent', null, {'sort_type' : "reagent"}, data.new_rule_sort == "reagent" ? 'selected' : null)}}
+		{{:helper.link('Name', null, {'sort_type' : "name"}, data.new_rule_sort == "name" ? 'selected' : null)}}
 	</div>
 	<div class="itemLabel"> Sort what: </div>
 	<div class="itemContent">

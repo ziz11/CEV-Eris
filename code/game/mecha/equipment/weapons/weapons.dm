@@ -122,7 +122,7 @@
 	icon_state = "pulse1_bl"
 	var/life = 20
 
-	Bump(atom/A)
+	Bump(atom/A, var/forced)
 		A.bullet_act(src, def_zone)
 		src.life -= 10
 		if(life <= 0)
@@ -212,7 +212,7 @@
 	name = "\improper LBX AC 10 \"Scattershot\""
 	icon_state = "mecha_scatter"
 	equip_cooldown = 20
-	projectile = /obj/item/projectile/bullet/a10mm
+	projectile = /obj/item/projectile/bullet/pistol
 	fire_sound = 'sound/weapons/Gunshot.ogg'
 	fire_volume = 80
 	projectiles = 40
@@ -224,7 +224,7 @@
 	name = "\improper Ultra AC 2"
 	icon_state = "mecha_uac2"
 	equip_cooldown = 10
-	projectile = /obj/item/projectile/bullet/a10mm
+	projectile = /obj/item/projectile/bullet/pistol
 	fire_sound = 'sound/weapons/Gunshot.ogg'
 	projectiles = 300
 	projectiles_per_shot = 3

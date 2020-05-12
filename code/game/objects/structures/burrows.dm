@@ -61,6 +61,10 @@
 /obj/structure/burrow/New(var/loc, var/turf/anchor)
 	.=..()
 	all_burrows.Add(src)
+	var/obj/machinery/power/nt_obelisk/obelisk = locate(/obj/machinery/power/nt_obelisk) in range(7, src)
+	if(obelisk && obelisk.active)
+		qdel(src)
+		return
 	if (anchor)
 		offset_to(anchor, 8)
 
@@ -158,7 +162,7 @@ percentage is a value in the range 0..1 that determines what portion of this mob
 	Passing a percentage of zero is a special case, this burrow will not suck up any mobs.
 	The mobs it is to send should be placed inside it by the caller
 */
-/obj/structure/burrow/proc/migrate_to(var/obj/structure/burrow/_target, var/time = 0, var/percentage = 1)
+/obj/structure/burrow/proc/migrate_to(var/obj/structure/burrow/_target, var/time = 1, var/percentage = 1)
 	if (!_target)
 		return
 
@@ -170,6 +174,7 @@ percentage is a value in the range 0..1 that determines what portion of this mob
 
 	if (!processing)
 		START_PROCESSING(SSobj, src)
+		processing = TRUE
 
 
 	//The time we started. Used for animations
@@ -210,6 +215,7 @@ percentage is a value in the range 0..1 that determines what portion of this mob
 		if (issuperioranimal(L))
 			//If its a superior animal, then we'll set their mob target to this burrow
 			var/mob/living/carbon/superior_animal/SA = L
+			SA.activate_ai()
 			SA.target_mob = src //Tell them to target this burrow
 			SA.stance = HOSTILE_STANCE_ATTACK //This should make them walk over and attack it
 
@@ -230,10 +236,16 @@ percentage is a value in the range 0..1 that determines what portion of this mob
 	duration = _duration
 	recieving = sender
 	START_PROCESSING(SSobj, src)
+	processing = TRUE
 
 
 
 /obj/structure/burrow/Process()
+	// Currently, STOP_PROCESSING does NOT instantly remove the object from processing queue
+	// This is a quick and dirty fix for runtime error spam caused by this
+	if(!processing)
+		return
+
 	//Burrows process when they are either sending or recieving mobs.
 	//One or the other, cant do both at once
 	var/progress = (world.time - migration_initiated) / duration
@@ -473,7 +485,7 @@ percentage is a value in the range 0..1 that determines what portion of this mob
 				else
 					qdel(src)
 	else
-		if(istype(I, /obj/item/stack/material) && I.get_material_name() == "steel")
+		if(istype(I, /obj/item/stack/material) && I.get_material_name() == MATERIAL_STEEL)
 			var/obj/item/stack/G = I
 
 			user.visible_message("[user] starts covering [src] with the [I]", "You start covering [src] with the [I]")

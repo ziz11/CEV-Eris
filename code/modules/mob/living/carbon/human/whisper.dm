@@ -23,8 +23,8 @@
 	if (src.stat)
 		return
 
-	if(name != GetVoice())
-		alt_name = "(as [get_id_name("Unknown")])"
+	if(name != rank_prefix_name(GetVoice()))
+		alt_name = "(as [rank_prefix_name(get_id_name())])"
 
 	//parse the language code and consume it
 	var/datum/language/speaking = parse_language(message)
@@ -58,7 +58,7 @@
 	else
 		not_heard = "[verb] something" //TODO get rid of the null language and just prevent speech if language is null
 
-	message = capitalize_cp1251(trim(message))
+	message = trim(message)
 
 	if(speech_problem_flag)
 		var/list/handle_r = handle_speech_problems(message)

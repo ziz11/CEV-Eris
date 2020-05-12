@@ -15,6 +15,7 @@
 	w_class = ITEM_SIZE_SMALL
 	reagent_flags = OPENCONTAINER
 	unacidable = 1 //glass doesn't dissolve in acid
+	matter = list(MATERIAL_GLASS = 1)
 	var/lid_icon_state = null
 
 	var/label_text = ""
@@ -42,12 +43,12 @@
 		/obj/machinery/biogenerator,
 		/obj/machinery/constructable_frame,
 		/obj/machinery/radiocarbon_spectrometer,
-		/obj/machinery/centrifuge, 
+		/obj/machinery/centrifuge,
 		/obj/machinery/electrolyzer
 		)
 
-/obj/item/weapon/reagent_containers/glass/New()
-	..()
+/obj/item/weapon/reagent_containers/glass/Initialize()
+	. = ..()
 	base_name = name
 
 /obj/item/weapon/reagent_containers/glass/proc/has_lid()

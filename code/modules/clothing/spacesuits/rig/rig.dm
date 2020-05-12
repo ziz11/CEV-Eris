@@ -13,7 +13,6 @@
  */
 
 /obj/item/weapon/rig
-
 	name = "hardsuit control module"
 	icon = 'icons/obj/rig_modules.dmi'
 	desc = "A back-mounted hardsuit deployment and control mechanism."
@@ -24,12 +23,20 @@
 	item_flags = DRAG_AND_DROP_UNEQUIP|EQUIP_SOUNDS
 
 	// These values are passed on to all component pieces.
-	armor = list(melee = 40, bullet = 35, energy = 35, bomb = 35, bio = 100, rad = 40)
+	armor = list(
+		melee = 30,
+		bullet = 20,
+		energy = 20,
+		bomb = 25,
+		bio = 100,
+		rad = 50
+	)
 	min_cold_protection_temperature = SPACE_SUIT_MIN_COLD_PROTECTION_TEMPERATURE
 	max_heat_protection_temperature = SPACE_SUIT_MAX_HEAT_PROTECTION_TEMPERATURE
-	siemens_coefficient = 0.2
+	siemens_coefficient = 0.1
 	permeability_coefficient = 0.1
 	unacidable = 1
+	slowdown = 1
 
 	var/interface_path = "hardsuit.tmpl"
 	var/ai_interface_path = "hardsuit.tmpl"
@@ -37,13 +44,14 @@
 	var/wearer_move_delay //Used for AI moving.
 	var/ai_controlled_move_delay = 10
 	var/aimove_power_usage = 200							  // Power usage per tile traveled when suit is moved by AI in IIS. In joules.
+	var/drain = 1											  // Power drained per tick when the suit is sealed. In 10 joule steps.
 
 
 	// Keeps track of what this rig should spawn with.
 	var/suit_type = "hardsuit"
 	var/list/initial_modules = list()
 	var/chest_type = /obj/item/clothing/suit/space/rig
-	var/helm_type =  /obj/item/clothing/head/helmet/space/rig
+	var/helm_type =  /obj/item/clothing/head/space/rig
 	var/boot_type =  /obj/item/clothing/shoes/magboots/rig
 	var/glove_type = /obj/item/clothing/gloves/rig
 	var/cell_type =  /obj/item/weapon/cell/large/high
@@ -53,7 +61,7 @@
 	var/obj/item/weapon/tank/air_supply                       // Air tank, if any.
 	var/obj/item/clothing/shoes/boots = null                  // Deployable boots, if any.
 	var/obj/item/clothing/suit/space/rig/chest                // Deployable chestpiece, if any.
-	var/obj/item/clothing/head/helmet/space/rig/helmet = null // Deployable helmet, if any.
+	var/obj/item/clothing/head/space/rig/helmet = null // Deployable helmet, if any.
 	var/obj/item/clothing/gloves/rig/gloves = null            // Deployable gauntlets, if any.
 	var/obj/item/weapon/cell/large/cell                             // Power supply, if any.
 	var/obj/item/rig_module/selected_module = null            // Primary system (used with middle-click)
@@ -61,7 +69,6 @@
 	var/obj/item/rig_module/voice/speech                      // As above.
 	var/obj/item/rig_module/storage/storage					  // var for installed storage module, if any
 	var/mob/living/carbon/human/wearer                        // The person currently wearing the rig.
-	var/image/mob_icon                                        // Holder for on-mob icon.
 	var/list/installed_modules = list()                       // Power consumption/use bookkeeping.
 
 	// Rig status vars.
@@ -105,8 +112,7 @@
 		return visor.vision.glasses
 
 /obj/item/weapon/rig/examine()
-	to_chat(usr, "This is \icon[src][src.name].")
-	to_chat(usr, "[src.desc]")
+	..()
 	if(wearer)
 		for(var/obj/item/piece in list(helmet,gloves,chest,boots))
 			if(!piece || piece.loc != wearer)
@@ -117,8 +123,8 @@
 		to_chat(usr, "The maintenance panel is [open ? "open" : "closed"].")
 		to_chat(usr, "Hardsuit systems are [offline ? "<font color='red'>offline</font>" : "<font color='green'>online</font>"].")
 
-/obj/item/weapon/rig/New()
-	..()
+/obj/item/weapon/rig/Initialize()
+	. = ..()
 
 	item_state = icon_state
 	wires = new(src)
@@ -128,7 +134,7 @@
 		allowed |= extra_allowed
 
 	if((!req_access || !req_access.len) && (!req_one_access || !req_one_access.len))
-		locked = 0
+		locked = FALSE
 
 	spark_system = new()
 	spark_system.set_up(5, 0, src)
@@ -352,6 +358,9 @@
 				M.drop_from_inventory(piece)
 			piece.forceMove(src)
 
+	if(active == TRUE) // dains power from the cell whenever the suit is sealed
+		cell.use(drain*0.1)
+
 	if(!istype(wearer) || loc != wearer || wearer.back != src || canremove || !cell || cell.charge <= 0)
 		if(!cell || cell.charge <= 0)
 			if(electrified > 0)
@@ -506,27 +515,14 @@
 		ui.open()
 		ui.set_auto_update(1)
 
+/obj/item/weapon/rig/proc/get_species_icon()
+	return 'icons/mob/rig_back.dmi'
+
 /obj/item/weapon/rig/update_icon(var/update_mob_icon)
-
-	overlays.Cut()
-	if(!mob_icon || update_mob_icon)
-		var/species_icon = 'icons/mob/rig_back.dmi'
-		// Since setting mob_icon will override the species checks in
-		// update_inv_wear_suit(), handle species checks here.
-		mob_icon = image("icon" = species_icon, "icon_state" = icon_state)
-
 	if(installed_modules.len)
 		for(var/obj/item/rig_module/module in installed_modules)
 			if(module.suit_overlay)
 				chest.overlays += image("icon" = 'icons/mob/rig_modules.dmi', "icon_state" = module.suit_overlay, "dir" = SOUTH)
-
-	if(wearer)
-		wearer.update_inv_shoes()
-		wearer.update_inv_gloves()
-		wearer.update_inv_head()
-		wearer.update_inv_wear_suit()
-		wearer.update_inv_back()
-	return
 
 /obj/item/weapon/rig/proc/check_suit_access(var/mob/living/carbon/human/user)
 
@@ -836,6 +832,9 @@
 		return 1
 	return 0
 
+/obj/item/weapon/rig/get_cell()
+	return cell
+
 /obj/item/weapon/rig/proc/ai_can_move_suit(var/mob/user, var/check_user_module = 0, var/check_for_ai = 0)
 
 	if(check_for_ai)
@@ -949,6 +948,48 @@
 		air_supply.remove_air(air_supply.air_contents.total_moles)
 	else
 		QDEL_NULL(air_supply)
+
+/obj/item/weapon/rig/clean_blood()
+	..()
+	if(chest)
+		chest.clean_blood()
+	if(boots)
+		boots.clean_blood()
+	if(helmet)
+		helmet.clean_blood()
+	if(gloves)
+		gloves.clean_blood()
+	var/obj/glasses = getCurrentGlasses()
+	if(glasses)
+		glasses.clean_blood()
+
+/obj/item/weapon/rig/decontaminate()
+	..()
+	if(chest)
+		chest.decontaminate()
+	if(boots)
+		boots.decontaminate()
+	if(helmet)
+		helmet.decontaminate()
+	if(gloves)
+		gloves.decontaminate()
+	var/obj/item/glasses = getCurrentGlasses()
+	if(glasses)
+		glasses.decontaminate()
+
+/obj/item/weapon/rig/make_young()
+	..()
+	if(chest)
+		chest.make_young()
+	if(boots)
+		boots.make_young()
+	if(helmet)
+		helmet.make_young()
+	if(gloves)
+		gloves.make_young()
+	var/obj/glasses = getCurrentGlasses()
+	if(glasses)
+		glasses.make_young()
 
 #undef ONLY_DEPLOY
 #undef ONLY_RETRACT

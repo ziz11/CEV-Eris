@@ -79,7 +79,7 @@
 
 	stating_laws[prefix] = 1
 
-	var/can_state = statelaw("[prefix]Current Active Laws:")
+	var/can_state = statelaw("[prefix] Current Active Laws:")
 
 	for(var/datum/ai_law/law in laws.laws_to_state())
 		can_state = statelaw("[prefix][law.get_index()]. [law.law]")
@@ -91,7 +91,7 @@
 	stating_laws[prefix] = 0
 
 /mob/living/silicon/proc/statelaw(var/law)
-	if(src.say(utf8_to_cp1251(law)))
+	if(src.say(law))
 		sleep(10)
 		return 1
 

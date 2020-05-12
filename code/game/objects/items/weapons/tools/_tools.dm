@@ -2,7 +2,7 @@
 #define EXCAVATE 0
 #define DIG 1
 
-// Time added to tool operations in percent based on original time 
+// Time added to tool operations in percent based on original time
 // (if you dig hole in 10 seconds then 50 ADDITIONAL_TIME_LOWHEALTH will add 0 on full health, 2.5sec on 50% health and 5sec ~0% health)
 #define ADDITIONAL_TIME_LOWHEALTH 60
 
@@ -22,6 +22,7 @@
 	var/use_power_cost = 0	//For tool system, determinze how much power tool will drain from cells, 0 means no cell needed
 	var/obj/item/weapon/cell/cell = null
 	var/suitable_cell = null	//Dont forget to edit this for a tool, if you want in to consume cells
+	var/passive_power_cost = 1 //Energy consumed per process tick while active
 
 	var/use_fuel_cost = 0	//Same, only for fuel. And for the sake of God, DONT USE CELLS AND FUEL SIMULTANEOUSLY.
 	var/passive_fuel_cost = 0.03 //Fuel consumed per process tick while active
@@ -39,7 +40,7 @@
 
 
 	//Variables used for tool degradation
-	var/degradation = 0.8 //If nonzero, the health of the tool decreases by this percent after each tool operation
+	var/degradation = 0.8 //If nonzero, the health of the tool decreases by this amount after each tool operation
 	health = 0		// Health of a tool.
 	max_health = 1000
 	var/health_threshold  = 40 // threshold in percent on which tool health stops dropping
@@ -57,8 +58,6 @@
 	var/last_tooluse = 0 //When the tool was last used for a tool operation. This is set both at the start of an operation, and after the doafter call
 
 	//Vars for tool upgrades
-	var/list/upgrades = list()
-	var/max_upgrades = 3
 	var/precision = 0	//Subtracted from failure rates
 	var/workspeed = 1	//Worktimes are divided by this
 	var/extra_bulk = 0 	//Extra physicial volume added by certain mods
@@ -88,6 +87,12 @@
 	update_icon()
 	return
 
+/obj/item/weapon/tool/Initialize(mapload, ...)
+	. = ..()
+	var/obj/screen/item_action/action = new /obj/screen/item_action/top_bar/tool_info
+	action.owner = src
+	hud_actions = list(action)
+
 //Fuel and cell spawn
 /obj/item/weapon/tool/Created()
 	QDEL_NULL(cell)
@@ -112,6 +117,7 @@
 
 //Ignite plasma around, if we need it
 /obj/item/weapon/tool/Process()
+	SSnano.update_uis(src)
 	if(switched_on)
 		if(create_hot_spot)
 			var/turf/location = get_turf(src)
@@ -122,8 +128,12 @@
 			sparks.set_up(3, 0, get_turf(src))
 			sparks.start()
 
-		if (passive_fuel_cost)
+		if (use_fuel_cost && passive_fuel_cost)
 			if(!consume_fuel(passive_fuel_cost))
+				turn_off()
+
+		if(use_power_cost && passive_power_cost)
+			if(!cell?.checked_use(passive_power_cost))
 				turn_off()
 
 
@@ -135,48 +145,15 @@
 	else
 		..()
 
+/obj/item/weapon/tool/get_cell()
+	return cell
+
 /obj/item/weapon/tool/attackby(obj/item/C, mob/living/user)
 	if(istype(C, suitable_cell) && !cell && insert_item(C, user))
 		src.cell = C
 		update_icon()
 		return
 
-	//Removing upgrades from a tool. Very difficult, but passing the check only gets you the perfect result
-	//You can also get a lesser success (remove the upgrade but break it in the process) if you fail
-	//Using a laser guided stabilised screwdriver is recommended. Precision mods will make this easier
-	if (upgrades.len && C.has_quality(QUALITY_SCREW_DRIVING))
-		var/list/possibles = upgrades.Copy()
-		possibles += "Cancel"
-		var/obj/item/weapon/tool_upgrade/toremove = input("Which upgrade would you like to try to remove? The upgrade will probably be destroyed in the process","Removing Upgrades") in possibles
-		if (toremove == "Cancel")
-			return
-
-		if (C.use_tool(user = user, target =  src, base_time = WORKTIME_SLOW, required_quality = QUALITY_SCREW_DRIVING, fail_chance = FAILCHANCE_CHALLENGING, required_stat = STAT_MEC))
-			//If you pass the check, then you manage to remove the upgrade intact
-			to_chat(user, SPAN_NOTICE("You successfully remove [toremove] while leaving it intact."))
-			upgrades -= toremove
-			toremove.forceMove(get_turf(src))
-			toremove.holder = null
-			refresh_upgrades()
-			return 1
-		else
-			//You failed the check, lets see what happens
-			if (prob(50))
-				//50% chance to break the upgrade and remove it
-				to_chat(user, SPAN_DANGER("You successfully remove [toremove], but destroy it in the process."))
-				upgrades -= toremove
-				toremove.forceMove(get_turf(src))
-				toremove.holder = null
-				spawn(1)
-					QDEL_NULL(toremove)
-				refresh_upgrades()
-				return 1
-			else if (degradation) //Because robot tools are unbreakable
-				//otherwise, damage the host tool a bit, and give you another try
-				to_chat(user, SPAN_DANGER("You only managed to damage [src], but you can retry."))
-				adjustToolHealth(-(5 * degradation), user) // inflicting 4 times use damage
-				refresh_upgrades()
-				return 1
 	if(isBroken)
 		to_chat(user, SPAN_WARNING("\The [src] is broken."))
 		return
@@ -193,8 +170,78 @@
 			turn_off(user)
 		else
 			turn_on(user)
+		SSnano.update_uis(src)
 	..()
 	return
+
+
+/obj/item/weapon/tool/ui_data(mob/user)
+	var/list/data = list()
+
+	if(tool_qualities)
+		data["tool_qualities"] = list()
+		for(var/name in tool_qualities)
+			data["tool_qualities"] += list(list("name" = capitalize(name), "number" = tool_qualities[name]))
+
+	data["precision"] = precision
+	data["precision_state"] = precision > 0 ? "good" : precision < 0 ? "bad" : ""
+
+	data["workspeed"] = workspeed
+	data["workspeed_state"] = initial(workspeed) < workspeed ? "good" : initial(workspeed) > workspeed ? "bad" : ""
+	data["workspeed_max"] = initial(workspeed) * 20
+
+	data["degradation"] = degradation
+	data["degradation_state"] = initial(degradation) > degradation ? "good" : initial(degradation) < degradation ? "bad" : ""
+	data["degradation_max"] = initial(degradation) * 10
+
+	if(use_power_cost)
+		data["cell_charge"] = cell ? cell.percent() : null
+		data["use_power_cost"] = use_power_cost
+		data["use_power_cost_state"] = initial(use_power_cost) > use_power_cost ? "good" : initial(use_power_cost) < use_power_cost ? "bad" : ""
+		data["use_power_cost_max"] = initial(use_power_cost) * 10
+
+	if(use_fuel_cost)
+		data["fuel"] = reagents ? reagents.ui_data() : null
+		data["max_fuel"] = max_fuel
+		data["use_fuel_cost"] = use_fuel_cost
+		data["use_fuel_cost_state"] = initial(use_fuel_cost) > use_fuel_cost ? "good" : initial(use_fuel_cost) < use_fuel_cost ? "bad" : ""
+		data["use_fuel_cost_max"] = initial(use_fuel_cost) * 10
+
+	data["health"] = health
+	data["health_max"] = max_health
+	data["health_threshold"] = health_threshold
+
+	data["force"] = force
+	data["force_max"] = initial(force) * 10
+
+
+	data["extra_volume"] = extra_bulk
+
+	data["upgrades_max"] = max_upgrades
+
+	// it could be done with catalog using one line but whatever
+	if(item_upgrades.len)
+		data["attachments"] = list()
+		for(var/atom/A in item_upgrades)
+			data["attachments"] += list(list("name" = A.name, "icon" = getAtomCacheFilename(A)))
+
+	return data
+
+/obj/item/weapon/tool/ui_interact(mob/user, ui_key = "main", datum/nanoui/ui = null, force_open = 1, state = GLOB.default_state)
+	var/list/data = ui_data(user)
+
+	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
+	if (!ui)
+		ui = new(user, src, ui_key, "tool_stats.tmpl", name, 650, 550, state = state)
+		ui.auto_update_layout = 1
+		ui.set_initial_data(data)
+		ui.open()
+
+// saves troubles for some one else who will expand this
+// delete this comment if you are the chosen one
+/obj/item/weapon/tool/Topic(href, href_list)
+	if(..())
+		return 1
 
 //Damaged tools are worth less matter for recycling
 /obj/item/weapon/tool/get_matter()
@@ -221,7 +268,7 @@
 
 //Simple form ideal for basic use. That proc will return TRUE only when everything was done right, and FALSE if something went wrong, ot user was unlucky.
 //Editionaly, handle_failure proc will be called for a critical failure roll.
-/obj/item/proc/use_tool(var/mob/living/user, var/atom/target, var/base_time, var/required_quality, var/fail_chance, var/required_stat, var/instant_finish_tier = 110, forced_sound = null, var/sound_repeat = 2.5)
+/obj/item/proc/use_tool(mob/living/user, atom/target, base_time, required_quality, fail_chance, required_stat, instant_finish_tier = 110, forced_sound = null, sound_repeat = 2.5 SECONDS)
 	var/obj/item/weapon/tool/T
 	if (istool(src))
 		T = src
@@ -231,7 +278,7 @@
 
 	if (T)
 		T.tool_in_use = FALSE
-
+	SSnano.update_uis(src)
 	switch(result)
 		if(TOOL_USE_CANCEL)
 			return FALSE
@@ -242,7 +289,7 @@
 			return TRUE
 
 //Use this proc if you want to handle all types of failure yourself. It used in surgery, for example, to deal damage to patient.
-/obj/item/proc/use_tool_extended(var/mob/living/user, var/atom/target, base_time, required_quality, fail_chance, required_stat = null, instant_finish_tier = 110, forced_sound = null, var/sound_repeat = 2.5 SECONDS)
+/obj/item/proc/use_tool_extended(mob/living/user, atom/target, base_time, required_quality, fail_chance, required_stat, instant_finish_tier = 110, forced_sound = null, sound_repeat = 2.5 SECONDS)
 
 	var/obj/item/weapon/tool/T
 	if(istool(src))
@@ -377,7 +424,7 @@
 				if(T.lastNearBreakMessage > world.time + 60 SECONDS) // once in 1 minute
 					T.lastNearBreakMessage = world.time
 					to_chat(user, SPAN_DANGER("Your [src.name] is about to fall apart."))
-		
+
 	//precision reduce failure rates
 	if (T)
 		fail_chance -= T.precision
@@ -386,7 +433,7 @@
 
 	if (fail_chance < 0)
 		fail_chance = 0
-	
+
 	if (fail_chance >= 100)
 		to_chat(user, SPAN_WARNING("You failed to finish your task with [src.name]! Considering your skills and this tool, it is impossible."))
 		return TOOL_USE_FAIL
@@ -395,7 +442,7 @@
 		if(fail_chance < 5)
 			chanceMessage = "great"
 		else if(fail_chance < 25)
-			chanceMessage = "big"
+			chanceMessage = "good"
 		else if(fail_chance < 50)
 			chanceMessage = "moderate"
 		else if(fail_chance < 75)
@@ -588,7 +635,7 @@
 	return null
 
 //We are cheking if our item got required qualities. If we require several qualities, and item posses more than one of those, we ask user to choose how that item should be used
-/obj/item/proc/get_tool_type(var/mob/living/user, var/list/required_qualities, var/atom/use_on, var/datum/callback/CB)
+/obj/item/proc/get_tool_type(mob/living/user, list/required_qualities, atom/use_on, datum/callback/CB)
 	var/list/L = required_qualities & tool_qualities
 
 	if(!L.len)
@@ -608,16 +655,31 @@
 	return return_quality
 
 /obj/item/weapon/tool/proc/turn_on(var/mob/user)
+	if(use_power_cost)
+		if(!cell)
+			to_chat(user, SPAN_WARNING("\The [src] has no cell!"))
+			return FALSE
+		if(cell.charge < use_power_cost)
+			to_chat(user, SPAN_WARNING("\The [src] does not have enough power!"))
+			return FALSE
+	if(user)
+		to_chat(user, SPAN_NOTICE("\The [src] turns on."))
 	switched_on = TRUE
 	tool_qualities = switched_on_qualities
 	if (!isnull(switched_on_force))
 		force = switched_on_force
+		if(wielded)
+			force *= 1.3
 	if(glow_color)
 		set_light(l_range = 1.7, l_power = 1.3, l_color = glow_color)
+	START_PROCESSING(SSobj, src)
 	update_icon()
 	update_wear_icon()
+	return TRUE
 
 /obj/item/weapon/tool/proc/turn_off(var/mob/user)
+	if(user)
+		to_chat(user, SPAN_NOTICE("\The [src] turns off."))
 	switched_on = FALSE
 	STOP_PROCESSING(SSobj, src)
 	tool_qualities = switched_off_qualities
@@ -646,7 +708,7 @@
 		timespent = 5
 
 	if(use_power_cost)
-		if (!cell.checked_use(use_power_cost*timespent))
+		if (!cell?.checked_use(use_power_cost*timespent))
 			to_chat(user, SPAN_WARNING("[src] battery is dead or missing."))
 			return FALSE
 
@@ -718,7 +780,7 @@
 /***************************
 	Tool Upgrades
 ****************************/
-/obj/item/weapon/tool/proc/refresh_upgrades()
+/obj/item/weapon/tool/refresh_upgrades()
 //First of all, lets reset any var that could possibly be altered by an upgrade
 	degradation = initial(degradation)
 	workspeed = initial(workspeed)
@@ -740,17 +802,17 @@
 	prefixes = list()
 
 	//Now lets have each upgrade reapply its modifications
-	for (var/obj/item/weapon/tool_upgrade/T in upgrades)
-		T.apply_values()
+	SEND_SIGNAL(src, COMSIG_APPVAL, src)
 
 	for (var/prefix in prefixes)
 		name = "[prefix] [name]"
-	
+
 	health_threshold = max(0, health_threshold)
 
 	//Set the fuel volume, incase any mods altered our max fuel
 	if (reagents)
 		reagents.maximum_volume = max_fuel
+	SSnano.update_uis(src)
 
 
 /obj/item/weapon/tool/examine(mob/user)
@@ -761,7 +823,7 @@
 		if(!cell)
 			to_chat(user, SPAN_WARNING("There is no cell inside to power the tool"))
 		else
-			to_chat(user, "The charge meter reads [round(cell.percent() )]%.")
+			to_chat(user, "The charge meter reads [round(cell.percent())]%.")
 
 	if(use_fuel_cost)
 		to_chat(user, text("\icon[] [] contains []/[] units of fuel!", src, src.name, get_fuel(),src.max_fuel ))
@@ -776,9 +838,9 @@
 	if (workspeed != 1)
 		to_chat(user, "Work Speed: [SPAN_NOTICE("[workspeed*100]%")]")
 
-	if (upgrades.len)
+	if (item_upgrades.len)
 		to_chat(user, "It has the following upgrades installed:")
-		for (var/obj/item/weapon/tool_upgrade/TU in upgrades)
+		for (var/obj/item/TU in item_upgrades)
 			to_chat(user, SPAN_NOTICE(TU.name))
 
 	if (health)
@@ -992,3 +1054,15 @@
 							QUALITY_CUTTING = 100)
 
 #undef ADDITIONAL_TIME_LOWHEALTH
+
+/obj/screen/item_action/top_bar/tool_info
+	icon = 'icons/mob/screen/gun_actions.dmi'
+	screen_loc = "8,1:13"
+	minloc = "7,2:13"
+	name = "Tool information"
+	icon_state = "info"
+
+/obj/item/weapon/tool/ui_action_click(mob/living/user, action_name)
+	switch(action_name)
+		if("Tool information")
+			ui_interact(user)

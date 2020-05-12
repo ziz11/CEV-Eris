@@ -2,7 +2,7 @@
 	name = "Type - 0315"
 	desc = "Love and concrete."
 
-	faction = "hive"
+	faction = "onestar"
 
 	icon = 'icons/mob/64x64.dmi'
 	icon_state = "onestar_boss_unpowered"
@@ -21,7 +21,9 @@
 	megafauna_min_cooldown = 30
 	megafauna_max_cooldown = 60
 
-	projectiletype = /obj/item/projectile/bullet/a556/nomuzzle
+	wander = FALSE //No more sleepwalking
+
+	projectiletype = /obj/item/projectile/bullet/srifle/nomuzzle
 
 /mob/living/simple_animal/hostile/megafauna/one_star/death()
 	..()
@@ -57,8 +59,8 @@
 		var/mob/living/L = target_mob
 		L.attack_generic(src,rand(melee_damage_lower,melee_damage_upper),attacktext)
 		return L
-	if(istype(target_mob,/obj/mecha))
-		var/obj/mecha/M = target_mob
+	if(istype(target_mob, /mob/living/exosuit))
+		var/mob/living/exosuit/M = target_mob
 		M.attack_generic(src,rand(melee_damage_lower,melee_damage_upper),attacktext)
 		return M
 	if(istype(target_mob,/obj/machinery/bot))

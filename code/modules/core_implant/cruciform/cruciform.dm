@@ -13,9 +13,9 @@ var/list/disciples = list()
 	power_regen = 0.5
 	price_tag = 500
 
-/obj/item/weapon/implant/core_implant/cruciform/get_mob_overlay(gender, body_build)
+/obj/item/weapon/implant/core_implant/cruciform/get_mob_overlay(gender)
 	gender = (gender == MALE) ? "m" : "f"
-	return image('icons/mob/human_races/cyberlimbs/neotheology.dmi', "[icon_state]_[gender][body_build]")
+	return image('icons/mob/human_races/cyberlimbs/neotheology.dmi', "[icon_state]_[gender]")
 
 /obj/item/weapon/implant/core_implant/cruciform/hard_eject()
 	if(!ishuman(wearer))
@@ -26,7 +26,7 @@ var/list/disciples = list()
 	H.adjustBrainLoss(55+rand(5))
 	H.adjustOxyLoss(100+rand(50))
 	if(part)
-		H.apply_damage(100+rand(75), BURN, part)
+		H.apply_damage(100+rand(75), BURN, part, used_weapon = src)
 	H.apply_effect(40+rand(20), IRRADIATE, check_protection = 0)
 	var/datum/effect/effect/system/spark_spread/s = new
 	s.set_up(3, 1, src)
@@ -85,11 +85,14 @@ var/list/disciples = list()
 	if(!wearer)
 		return
 	for(var/obj/O in wearer)
-		if(istype(O, /obj/item/organ/external/robotic))
-			var/obj/item/organ/external/robotic/R = O
+		if(istype(O, /obj/item/organ/external))
+			var/obj/item/organ/external/R = O
+			if(!BP_IS_ROBOTIC(R))
+				continue
+
 			if(R.owner != wearer)
 				continue
-			wearer.visible_message(SPAN_DANGER("[wearer]'s [R.name] tears off."),\
+			wearer.visible_message(SPAN_DANGER("[wearer]'s [R.name] tears off."),
 			SPAN_DANGER("Your [R.name] tears off."))
 			R.droplimb()
 		if(istype(O, /obj/item/weapon/implant))
@@ -97,6 +100,8 @@ var/list/disciples = list()
 				continue
 			var/obj/item/weapon/implant/R = O
 			if(R.wearer != wearer)
+				continue
+			if(R.cruciform_resist)
 				continue
 			wearer.visible_message(SPAN_DANGER("[R.name] rips through [wearer]'s [R.part]."),\
 			SPAN_DANGER("[R.name] rips through your [R.part]."))

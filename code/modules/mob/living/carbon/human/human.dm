@@ -10,7 +10,6 @@
 	var/obj/item/weapon/rig/wearing_rig // This is very not good, but it's much much better than calling get_rig() every update_lying_buckled_and_verb_status() call.
 
 /mob/living/carbon/human/New(var/new_loc, var/new_species = null)
-	body_build = get_body_build(gender)
 
 	if(!dna)
 		dna = new /datum/dna(null)
@@ -49,10 +48,18 @@
 		sync_organ_dna()
 	make_blood()
 
+	sanity = new(src)
+
+	AddComponent(/datum/component/fabric)
+
 /mob/living/carbon/human/Destroy()
 	GLOB.human_mob_list -= src
+
+	// Prevent death from organ removal
+	status_flags |= REBUILDING_ORGANS
 	for(var/organ in organs)
 		qdel(organ)
+	organs.Cut()
 	return ..()
 
 /mob/living/carbon/human/Stat()
@@ -118,7 +125,7 @@
 
 		if (2.0)
 			if (!shielded)
-				b_loss += 60
+				b_loss += 150
 
 			if (!istype(l_ear, /obj/item/clothing/ears/earmuffs) && !istype(r_ear, /obj/item/clothing/ears/earmuffs))
 				ear_damage += 30
@@ -127,7 +134,7 @@
 				Paralyse(10)
 
 		if(3.0)
-			b_loss += 30
+			b_loss += 100
 			if (!istype(l_ear, /obj/item/clothing/ears/earmuffs) && !istype(r_ear, /obj/item/clothing/ears/earmuffs))
 				ear_damage += 15
 				ear_deaf += 60
@@ -136,29 +143,13 @@
 	if (bomb_defense)
 		b_loss = max(b_loss - bomb_defense, 0)
 		f_loss = max(f_loss - bomb_defense, 0)
-	var/update = 0
 
-	// focus most of the blast on one organ
-	var/obj/item/organ/external/take_blast = pick(organs)
-	update |= take_blast.take_damage(b_loss * 0.9, f_loss * 0.9, used_weapon = "Explosive blast")
-
-	// distribute the remaining 10% on all limbs equally
-	b_loss *= 0.1
-	f_loss *= 0.1
-
-	var/weapon_message = "Explosive Blast"
-
-	for(var/obj/item/organ/external/temp in organs)
-		switch(temp.name)
-			if(BP_HEAD)
-				update |= temp.take_damage(b_loss * 0.2, f_loss * 0.2, used_weapon = weapon_message)
-			if(BP_CHEST)
-				update |= temp.take_damage(b_loss * 0.4, f_loss * 0.4, used_weapon = weapon_message)
-			else
-				update |= temp.take_damage(b_loss * 0.05, f_loss * 0.05, used_weapon = weapon_message)
-	if(update)
-		UpdateDamageIcon()
-
+	var/organ_hit = BP_CHEST //Chest is hit first
+	var/exp_damage
+	while (b_loss > 0)
+		b_loss -= exp_damage = rand(0, b_loss)
+		src.apply_damage(exp_damage, BRUTE, organ_hit)
+		organ_hit = pickweight(list(BP_HEAD = 0.2, BP_GROIN = 0.2, BP_R_ARM = 0.1, BP_L_ARM = 0.1, BP_R_LEG = 0.1, BP_L_LEG = 0.1))  //We determine some other body parts that should be hit
 
 /mob/living/carbon/human/restrained()
 	if (handcuffed)
@@ -196,7 +187,7 @@
 		dat += "<BR><b>Right hand:</b> <A href='?src=\ref[src];item=[slot_r_hand]'>[istype(r_hand) ? r_hand : "nothing"]</A>"*/
 
 	// Do they get an option to set internals?
-	if(istype(wear_mask, /obj/item/clothing/mask) || istype(head, /obj/item/clothing/head/helmet/space))
+	if(istype(wear_mask, /obj/item/clothing/mask) || istype(head, /obj/item/clothing/head/space))
 		if(istype(back, /obj/item/weapon/tank) || istype(belt, /obj/item/weapon/tank) || istype(s_store, /obj/item/weapon/tank))
 			dat += "<BR><A href='?src=\ref[src];item=internals'>Toggle internals.</A>"
 
@@ -320,14 +311,14 @@ var/list/rank_prefix = list(\
 
 //Removed the horrible safety parameter. It was only being used by ninja code anyways.
 //Now checks siemens_coefficient of the affected area by default
-/mob/living/carbon/human/electrocute_act(var/shock_damage, var/obj/source, var/base_siemens_coeff = 1.0, var/def_zone = null)
+/mob/living/carbon/human/electrocute_act(shock_damage, obj/source, siemens_coeff = 1.0, def_zone = null)
 	if(status_flags & GODMODE)	return 0	//godmode
 
 	if (!def_zone)
 		def_zone = pick(BP_L_ARM, BP_R_ARM)
 
 	var/obj/item/organ/external/affected_organ = get_organ(check_zone(def_zone))
-	var/siemens_coeff = base_siemens_coeff * get_siemens_coefficient_organ(affected_organ)
+	siemens_coeff *= get_siemens_coefficient_organ(affected_organ)
 
 	return ..(shock_damage, source, siemens_coeff, def_zone)
 
@@ -674,10 +665,10 @@ var/list/rank_prefix = list(\
 
 /mob/living/carbon/human/proc/check_has_mouth()
 	// Todo, check stomach organ when implemented.
-	var/obj/item/organ/external/head/H = get_organ(BP_HEAD)
-	if(!H || !H.can_intake_reagents)
-		return 0
-	return 1
+	var/obj/item/organ/external/H = get_organ(BP_HEAD)
+	if(!H || !(H.functions & BODYPART_REAGENT_INTAKE))
+		return FALSE
+	return TRUE
 
 /mob/living/carbon/human/vomit()
 
@@ -972,32 +963,32 @@ var/list/rank_prefix = list(\
 
 	return
 
-/mob/living/carbon/human/get_visible_implants(var/class = 0)
-
+/mob/living/carbon/human/get_visible_implants()
 	var/list/visible_implants = list()
-	for(var/obj/item/organ/external/organ in src.organs)
-		for(var/obj/item/weapon/O in organ.implants)
-			if(!istype(O,/obj/item/weapon/implant) && (O.w_class > class) && !istype(O,/obj/item/weapon/material/shard/shrapnel))
-				visible_implants += O
 
-	return(visible_implants)
+	for(var/obj/item/organ/external/organ in organs)
+		for(var/obj/item/I in (organ.implants & organ.embedded))
+			visible_implants += I
+
+	return visible_implants
 
 /mob/living/carbon/human/embedded_needs_process()
-	for(var/obj/item/organ/external/organ in src.organs)
+	for(var/obj/item/organ/external/organ in organs)
 		for(var/obj/item/O in organ.implants)
-			if(!istype(O, /obj/item/weapon/implant)) //implant type items do not cause embedding effects, see handle_embedded_objects()
-				return 1
-	return 0
+			if(is_sharp(O))	// Only sharp items can cause issues
+				return TRUE
+	return FALSE
 
 /mob/living/carbon/human/proc/handle_embedded_objects()
 
-	for(var/obj/item/organ/external/organ in src.organs)
+	for(var/obj/item/organ/external/organ in organs)
 		if(organ.status & ORGAN_SPLINTED) //Splints prevent movement.
 			continue
+
 		for(var/obj/item/O in organ.implants)
-			if(!istype(O,/obj/item/weapon/implant) && prob(5)) //Moving with things stuck in you could be bad.
-				// All kinds of embedded objects cause bleeding.
-				if(species.flags & NO_PAIN)
+			// Shrapnel hurts when you move, and implanting knives is a bad idea
+			if(prob(5) && is_sharp(O))
+				if(!organ.can_feel_pain())
 					to_chat(src, SPAN_WARNING("You feel [O] moving inside your [organ.name]."))
 				else
 					var/msg = pick( \
@@ -1005,10 +996,11 @@ var/list/rank_prefix = list(\
 						SPAN_WARNING("Your movement jostles [O] in your [organ.name] painfully."), \
 						SPAN_WARNING("Your movement jostles [O] in your [organ.name] painfully."))
 					to_chat(src, msg)
-
-				organ.take_damage(rand(1,3), 0, 0)
-				if(organ.setBleeding())
-					src.adjustToxLoss(rand(1,3))
+				var/mob/living/carbon/human/H = organ.owner
+				if(!MOVING_DELIBERATELY(H))
+					organ.take_damage(rand(1,3), 0, 0)
+					if(organ.setBleeding())
+						src.adjustToxLoss(rand(1,3))
 
 /mob/living/carbon/human/verb/check_pulse()
 	set category = "Object"
@@ -1117,14 +1109,12 @@ var/list/rank_prefix = list(\
 	else
 		return 0
 
-#define MODIFICATION_ORGANIC 1
-#define MODIFICATION_SILICON 2
-#define MODIFICATION_REMOVED 3
-
 //Needed for augmentation
 /mob/living/carbon/human/proc/rebuild_organs(from_preference)
 	if(!species)
 		return 0
+
+	status_flags |= REBUILDING_ORGANS
 
 	for(var/obj/item/organ/organ in (organs|internal_organs))
 		qdel(organ)
@@ -1180,8 +1170,9 @@ var/list/rank_prefix = list(\
 			var/obj/item/weapon/implant/core_implant/C = new I.implant_type
 			C.install(src)
 			C.activate()
-			C.install_default_modules_by_job(mind.assigned_job)
-			C.access.Add(mind.assigned_job.cruciform_access)
+			if(mind)
+				C.install_default_modules_by_job(mind.assigned_job)
+				C.access.Add(mind.assigned_job.cruciform_access)
 
 	else
 		var/organ_type = null
@@ -1193,7 +1184,7 @@ var/list/rank_prefix = list(\
 		for(var/organ_tag in species.has_organ)
 			organ_type = species.has_organ[organ_tag]
 			new organ_type(src)
-		
+
 		if(checkprefcruciform)
 			var/datum/category_item/setup_option/core_implant/I = client.prefs.get_option("Core implant")
 			if(I.implant_type)
@@ -1203,13 +1194,10 @@ var/list/rank_prefix = list(\
 				C.install_default_modules_by_job(mind.assigned_job)
 				C.access.Add(mind.assigned_job.cruciform_access)
 
+	status_flags &= ~REBUILDING_ORGANS
 	species.organs_spawned(src)
 
 	update_body()
-
-#undef MODIFICATION_REMOVED
-#undef MODIFICATION_ORGANIC
-#undef MODIFICATION_SILICON
 
 /mob/living/carbon/human/proc/bloody_doodle()
 	set category = "IC"
@@ -1316,10 +1304,10 @@ var/list/rank_prefix = list(\
 	if (flavor_text && flavor_text != "" && !shrink)
 		var/msg = trim(replacetext(flavor_text, "\n", " "))
 		if(!msg) return ""
-		if(lentext(msg) <= 40)
-			return "<font color='blue'>[russian_to_cp1251(msg)]</font>"
+		if(length(msg) <= 40)
+			return "<font color='blue'>[msg]</font>"
 		else
-			return "<font color='blue'>[copytext_preserve_html(russian_to_cp1251(msg), 1, 37)]... <a href='byond://?src=\ref[src];flavor_more=1'>More...</a></font>"
+			return "<font color='blue'>[copytext_preserve_html(msg, 1, 37)]... <a href='byond://?src=\ref[src];flavor_more=1'>More...</a></font>"
 	return ..()
 
 /mob/living/carbon/human/getDNA()

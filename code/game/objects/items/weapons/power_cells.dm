@@ -24,7 +24,7 @@
 
 /obj/item/weapon/cell/large/hyper
 	name = "Asters \"Robustcell-X 20000L\""
-	desc = "Asters Guild branded rechargeable L-standardized power cell. Looks like this is rare and powerful prototype."
+	desc = "Asters Guild branded rechargeable L-standardized power cell. Looks like this is a rare and powerful prototype."
 	icon_state = "b_hy"
 	origin_tech = list(TECH_POWER = 6)
 	maxcharge = 20000
@@ -124,7 +124,7 @@
 
 /obj/item/weapon/cell/medium/hyper
 	name = "Asters \"Robustcell-X 1500M\""
-	desc = "Asters Guild branded rechargeable M-standardized power cell. Looks like this is rare and powerful prototype."
+	desc = "Asters Guild branded rechargeable M-standardized power cell. Looks like this is a rare and powerful prototype."
 	icon_state = "m_hy"
 	origin_tech = list(TECH_POWER = 6)
 	maxcharge = 1500
@@ -203,7 +203,7 @@
 
 /obj/item/weapon/cell/small/hyper
 	name = "Asters \"Robustcell-X 500S\""
-	desc = "Asters Guild branded rechargeable S-standardized power cell. Looks like this is rare and powerful prototype."
+	desc = "Asters Guild branded rechargeable S-standardized power cell. Looks like this is a rare and powerful prototype."
 	icon_state = "s_hy"
 	origin_tech = list(TECH_POWER = 6)
 	maxcharge = 500
@@ -253,7 +253,7 @@
 	maxcharge = 50
 	// Autorecharge rate is calculated for PDA power consumption: enough to offset it, unless PDA light is on.
 	autorecharging = TRUE
-	autorecharge_rate = 0.0006
+	autorecharge_rate = 0.0007
 	recharge_time = 1
 
 /obj/item/weapon/cell/small/excelsior

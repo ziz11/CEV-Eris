@@ -121,8 +121,15 @@ What is the naming convention for planes or layers?
 #define SIGN_LAYER 3.4
 
 #define BELOW_MOB_LAYER 3.7
-#define LYING_MOB_LAYER 3.8
 //#define MOB_LAYER 4 //For easy recordkeeping; this is a byond define
+//[MECHS]
+#define MECH_UNDER_LAYER   3
+#define MECH_BASE_LAYER    4
+#define MECH_INTERMEDIATE_LAYER 4.5
+#define MECH_PILOT_LAYER   5
+#define MECH_COCKPIT_LAYER 6
+//[/MEHCS]
+
 #define ABOVE_MOB_LAYER 4.1
 #define ON_MOB_HUD_LAYER 4.2
 #define WALL_OBJ_LAYER 4.25

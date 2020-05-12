@@ -21,6 +21,7 @@
 	new /obj/random/pack/cloth/low_chance(src)
 	new /obj/random/pack/cloth/low_chance(src)
 	new /obj/random/pack/gun_loot/low_chance(src)
+	new /obj/random/pack/gun_loot/low_chance(src)
 
 
 
@@ -170,5 +171,16 @@
 	new /obj/random/rations(src)
 	new /obj/random/rations(src)
 	new /obj/random/cluster/roaches(src)
-	new /obj/random/cluster/roaches/low_chance(src)
-	new /obj/random/cluster/roaches/low_chance(src)
+
+// Used for scrap beacon
+/obj/structure/closet/random_hostilemobs/beacon/populate_contents()
+	new /obj/random/pack/rare(src) //To reward players for fighting this bullshit
+	new /obj/random/pack/rare(src)
+	new /obj/random/lowkeyrandom/low_chance(src)
+	new /obj/random/lowkeyrandom/low_chance(src)
+	new /obj/random/lowkeyrandom/low_chance(src)
+	new /obj/random/lowkeyrandom/low_chance(src)
+	new /obj/random/rations(src)
+	new /obj/random/rations(src)
+	new /obj/random/rations(src)
+	new /obj/random/cluster/roaches/beacon(src)

@@ -208,17 +208,23 @@
 /datum/chemical_reaction/proc/send_data(var/datum/reagents/holder, var/reaction_limit)
 	return null
 
+// UI data used by chemical catalog
 /datum/chemical_reaction/ui_data()
 	var/list/dat = list()
 	if(required_reagents)
 		dat["reagents"] = list()
 		for(var/id in required_reagents)
-			dat["reagents"] += list(list("type" = get_reagent_type_by_id(id), "reagent" = get_reagent_name_by_id(id), "parts" = "[required_reagents[id]] part\s of "))
-	if(required_reagents)
+			dat["reagents"] += list(list("type" = get_reagent_type_by_id(id), "reagent" = get_reagent_name_by_id(id), "parts" = "[required_reagents[id]] part\s"))
+	if(catalysts)
 		dat["catalyst"] = list()
 		for(var/id in catalysts)
 			dat["catalyst"] += list(list("type" = get_reagent_type_by_id(id), "reagent" = get_reagent_name_by_id(id), "units" = catalysts[id]))
-	dat["result_amount"] = "Results in [result_amount] part\s of substance."
+
+	dat["minimum_temperature"] = minimum_temperature
+	if(maximum_temperature != INFINITY)
+		dat["maximum_temperature"] = maximum_temperature
+
+	dat["result_amount"] = "[result_amount] part\s"
 	return dat
 /* Common reactions */
 
@@ -234,12 +240,12 @@
 
 /datum/chemical_reaction/tramadol
 	result = "tramadol"
-	required_reagents = list("inaprovaline" = 1, "ethanol" = 1, "acetone" = 1)
+	required_reagents = list("paracetamol" = 1, "sugar" = 1, "water" = 1)
 	result_amount = 3
 
 /datum/chemical_reaction/paracetamol
 	result = "paracetamol"
-	required_reagents = list("tramadol" = 1, "sugar" = 1, "water" = 1)
+	required_reagents = list("inaprovaline" = 1, "ethanol" = 1, "acetone" = 1)
 	result_amount = 3
 
 /datum/chemical_reaction/oxycodone
@@ -247,6 +253,12 @@
 	required_reagents = list("ethanol" = 1, "tramadol" = 1)
 	catalysts = list("plasma" = 5)
 	result_amount = 1
+
+/datum/chemical_reaction/toxin
+	result = "toxin"
+	required_reagents = list("ammonia" = 1, "mercury" = 1, "ethanol" = 1)
+	catalysts = list("plasma" = 5)
+	result_amount = 3
 
 /datum/chemical_reaction/sterilizine
 	result = "sterilizine"
@@ -272,6 +284,11 @@
 	result = "space_drugs"
 	required_reagents = list("mercury" = 1, "sugar" = 1, "lithium" = 1)
 	result_amount = 3
+
+/datum/chemical_reaction/nicotine
+    result = "nicotine"
+    required_reagents = list("toxin" = 1, "carbon" = 1, "capsaicin" = 1, "mercury" = 1)
+    result_amount = 4
 
 /datum/chemical_reaction/lube
 	result = "lube"
@@ -363,16 +380,41 @@
 	required_reagents = list("inaprovaline" = 2, "blattedin" = 1)
 	inhibitors = list("sugar" = 1) // Messes up with inaprovaline
 	result_amount = 3
+/datum/chemical_reaction/meralyne
+	result = "meralyne"
+	required_reagents = list("hyperzine" = 1, "blattedin" = 2, "tramadol" = 1)
+	result_amount = 2
 
 /datum/chemical_reaction/hyperzine
 	result = "hyperzine"
-	required_reagents = list("sugar" = 1, "phosphorus" = 1, "sulfur" = 1)
+	required_reagents = list("sugar" = 1, "blattedin" = 1, "sulfur" = 1)
 	result_amount = 3
 
 /datum/chemical_reaction/ryetalyn
 	result = "ryetalyn"
 	required_reagents = list("arithrazine" = 1, "carbon" = 1)
 	result_amount = 2
+/datum/chemical_reaction/negative_ling
+	result = "negativeling"
+	required_reagents = list("ryetalyn" = 1, "carbon" = 1)
+	result_amount = 1
+	maximum_temperature = INFINITY
+	minimum_temperature = 400
+
+/datum/chemical_reaction/positive_ling
+	result = "positiveling"
+	required_reagents = list("negativeling" = 1, "blood" = 1)
+	result_amount = 1
+	maximum_temperature = INFINITY
+	minimum_temperature = 700
+
+/datum/chemical_reaction/positive_ling/can_happen(datum/reagents/holder)
+	if(..())
+		var/list/blood_data = holder.get_data("blood")
+		if(blood_data["ling"])
+			return TRUE
+
+	return FALSE
 
 /datum/chemical_reaction/cryoxadone
 	result = "cryoxadone"
@@ -1844,8 +1886,10 @@
 
 /datum/chemical_reaction/vomitol
 	result = "vomitol"
-	required_reagents = list("carbon" = 1, "sugar" = 1, "acetone" = 1)
+	required_reagents = list("carbon" = 1, "hclacid" = 1, "acetone" = 1)
 	result_amount = 3
+	maximum_temperature = 683.14 //So it doesn't form back into vomitol, decompose, and form back again when over decomposition point
+	minimum_temperature = 0
 
 /datum/chemical_reaction/arectine
 	result = "arectine"
@@ -2023,7 +2067,7 @@
 
 /datum/chemical_reaction/nanopurgers
 	result = "nanopurgers"
-	required_reagents = list("nanites" = 1, "synaptizine" = 1)
+	required_reagents = list("nanites" = 1, "vomitol" = 1)
 	result_amount = 1
 
 /datum/chemical_reaction/cbu
@@ -2038,7 +2082,7 @@
 
 /datum/chemical_reaction/nanohands
 	result = "nanohands"
-	required_reagents = list("uncap nanites" = 1, "nanohands" = 1)
+	required_reagents = list("uncap nanites" = 1, "sterilizine" = 1)
 	result_amount = 1
 
 /datum/chemical_reaction/nanovoice

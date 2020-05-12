@@ -44,21 +44,14 @@
 	name = "closet"
 	result = /obj/structure/closet
 	steps = list(
-		list(CRAFT_MATERIAL, 3, MATERIAL_STEEL),
-	)
-
-/datum/craft_recipe/furniture/closet
-	name = "closet"
-	result = /obj/structure/closet
-	steps = list(
 		list(CRAFT_MATERIAL, 10, MATERIAL_STEEL),
 	)
 
-/datum/craft_recipe/furniture/crate/plasteel
-	name = "Metal crate"
+/datum/craft_recipe/furniture/crate/steel
+	name = "steel crate"
 	result = /obj/structure/closet/crate
 	steps = list(
-		list(CRAFT_MATERIAL, 10, MATERIAL_PLASTEEL),
+		list(CRAFT_MATERIAL, 10, MATERIAL_STEEL),
 	)
 
 /datum/craft_recipe/furniture/crate/plastic
@@ -80,6 +73,7 @@
 	result = /obj/structure/barricade
 	steps = list(
 		list(CRAFT_MATERIAL, 5, MATERIAL_WOOD),
+		list(QUALITY_HAMMERING, 10, 20)
 	)
 
 /datum/craft_recipe/furniture/coffin
@@ -129,7 +123,7 @@
 	name = "wooden chair"
 	result = /obj/structure/bed/chair/custom/wood
 	steps = list(
-		list(CRAFT_MATERIAL, 6, MATERIAL_WOOD),
+		list(CRAFT_MATERIAL, 5, MATERIAL_WOOD),
 	)
 
 //Custom chairs
@@ -149,17 +143,19 @@
 	steps = list(
 		list(CRAFT_MATERIAL, 5, MATERIAL_STEEL),
 	)
+	name_craft_menu = "Office chairs"
 
 /datum/craft_recipe/furniture/office_chair/light
 	name = "light office chair"
 	result = /obj/structure/bed/chair/office/light
+	variation_type = CRAFT_VARIATION
 
 // Wheelchairs
 /datum/craft_recipe/furniture/wheelchair
 	name = "wheelchair"
 	result = /obj/structure/bed/chair/wheelchair
 	steps = list(
-		list(CRAFT_MATERIAL, 8, MATERIAL_STEEL),
+		list(CRAFT_MATERIAL, 5, MATERIAL_STEEL),
 	)
 
 // Comfy chairs
@@ -169,35 +165,44 @@
 	steps = list(
 		list(CRAFT_MATERIAL, 5, MATERIAL_STEEL),
 	)
+	name_craft_menu = "Comfy chairs"
 
 /datum/craft_recipe/furniture/comfy_chair/black
 	name = "black comfy chair"
 	result = /obj/structure/bed/chair/comfy/black
+	variation_type = CRAFT_VARIATION
 
 /datum/craft_recipe/furniture/comfy_chair/brown
 	name = "brown comfy chair"
 	result = /obj/structure/bed/chair/comfy/brown
+	variation_type = CRAFT_VARIATION
 
 /datum/craft_recipe/furniture/comfy_chair/lime
 	name = "lime comfy chair"
 	result = /obj/structure/bed/chair/comfy/lime
+	variation_type = CRAFT_VARIATION
 
 /datum/craft_recipe/furniture/comfy_chair/teal
 	name = "teal comfy chair"
 	result = /obj/structure/bed/chair/comfy/teal
+	variation_type = CRAFT_VARIATION
 
 /datum/craft_recipe/furniture/comfy_chair/red
 	name = "red comfy chair"
 	result = /obj/structure/bed/chair/comfy/red
+	variation_type = CRAFT_VARIATION
 
 /datum/craft_recipe/furniture/comfy_chair/blue
 	name = "blue comfy chair"
 	result = /obj/structure/bed/chair/comfy/blue
+	variation_type = CRAFT_VARIATION
 
 /datum/craft_recipe/furniture/comfy_chair/purple
 	name = "purple comfy chair"
 	result = /obj/structure/bed/chair/comfy/purp
+	variation_type = CRAFT_VARIATION
 
 /datum/craft_recipe/furniture/comfy_chair/green
 	name = "green comfy chair"
 	result = /obj/structure/bed/chair/comfy/green
+	variation_type = CRAFT_VARIATION

@@ -11,46 +11,9 @@
 	..()
 
 	handle_viruses()
-	handle_nsa()
 	// Increase germ_level regularly
 	if(germ_level < GERM_LEVEL_AMBIENT && prob(30))	//if you're just standing there, you shouldn't get more germs beyond an ambient level
 		germ_level++
-
-/mob/living/carbon/proc/adjust_nsa(value, tag)
-	if(!tag)
-		crash_with("no tag given to adjust_nsa()")
-		return
-	nerve_system_accumulations[tag] = value
-
-/mob/living/carbon/proc/remove_nsa(tag)
-	if(nerve_system_accumulations[tag])
-		nerve_system_accumulations.Remove(tag)
-
-/mob/living/carbon/proc/get_nsa()
-	var/accumulatedNSA
-	for(var/tag in nerve_system_accumulations)
-		accumulatedNSA += nerve_system_accumulations[tag]
-	return accumulatedNSA
-
-/mob/living/carbon/proc/handle_nsa()
-	if(get_nsa() > nsa_threshold)
-		nsa_breached_effect()
-
-/mob/living/carbon/proc/nsa_breached_effect()
-	apply_effect(3, STUTTER)
-	make_jittery(10)
-	make_dizzy(10)
-	druggy = max(druggy, 40)
-	if(prob(5))
-		emote(pick("twitch", "drool", "moan", "blink_r", "shiver"))	
-	else if (prob(10))
-		var/direction = pick(cardinal)
-		if(MayMove(direction))
-			DoMove(direction)
-	else if(prob(20))
-		Weaken(10)
-		if(prob(5))
-			Stun(rand(1,5))
 
 /mob/living/carbon/Destroy()
 	qdel(ingested)
@@ -237,8 +200,12 @@
 				H.w_uniform.add_fingerprint(M)
 
 			var/show_ssd
+			var/target_organ_exists = FALSE
 			var/mob/living/carbon/human/H = src
-			if(istype(H)) show_ssd = H.species.show_ssd
+			if(istype(H))
+				show_ssd = H.species.show_ssd
+				var/obj/item/organ/external/O = H.get_organ(M.targeted_organ)
+				target_organ_exists = (O && O.is_usable())
 			if(show_ssd && !client && !teleop)
 				M.visible_message(SPAN_NOTICE("[M] shakes [src] trying to wake [t_him] up!"), \
 				SPAN_NOTICE("You shake [src], but they do not respond... Maybe they have S.S.D?"))
@@ -248,6 +215,16 @@
 					src.resting = 0
 				M.visible_message(SPAN_NOTICE("[M] shakes [src] trying to wake [t_him] up!"), \
 									SPAN_NOTICE("You shake [src] trying to wake [t_him] up!"))
+			else if((M.targeted_organ == BP_HEAD) && target_organ_exists)
+				M.visible_message(SPAN_NOTICE("[M] pats [src]'s head."), \
+									SPAN_NOTICE("You pat [src]'s head."))
+			else if(M.targeted_organ == BP_R_ARM || M.targeted_organ == BP_L_ARM)
+				if(target_organ_exists)
+					M.visible_message(SPAN_NOTICE("[M] shakes hands with [src]."), \
+										SPAN_NOTICE("You shake hands with [src]."))
+				else
+					M.visible_message(SPAN_NOTICE("[M] holds out \his hand to [src]."), \
+										SPAN_NOTICE("You hold out your hand to [src]."))
 			else
 				var/mob/living/carbon/human/hugger = M
 				if(istype(hugger))
@@ -297,6 +274,8 @@
 	if (istype(item, /obj/item/weapon/grab))
 		var/obj/item/weapon/grab/G = item
 		item = G.throw_held() //throw the person instead of the grab
+		if(!item) return
+		unEquip(G, loc)
 		if(ismob(item))
 			var/turf/start_T = get_turf(loc) //Get the start and target tile for the descriptors
 			var/turf/end_T = get_turf(target)

@@ -69,10 +69,8 @@
 	if(..())
 		return 1
 	usr.set_machine(src)
-	src.add_fingerprint(usr)
 
 	if(href_list["toggle_smelting"])
-
 		var/choice = input("What setting do you wish to use for processing [href_list["toggle_smelting"]]?") as null|anything in list("Smelting","Compressing","Alloying","Nothing")
 		if(!choice) return
 
@@ -85,16 +83,14 @@
 		machine.ores_processing[href_list["toggle_smelting"]] = choice
 
 	if(href_list["toggle_power"])
-
 		machine.active = !machine.active
 
 	if(href_list["toggle_ores"])
-
 		show_all_ores = !show_all_ores
 
 	playsound(loc, 'sound/machines/machine_switch.ogg', 100, 1)
 	src.updateUsrDialog()
-	return
+
 
 /**********************Mineral processing unit**************************/
 
@@ -108,8 +104,8 @@
 	light_range = 3
 	var/obj/machinery/mineral/console = null
 	var/sheets_per_tick = 10
-	var/list/ores_processing[0]
-	var/list/ores_stored[0]
+	var/list/ores_processing
+	var/list/ores_stored
 	var/static/list/alloy_data
 	var/active = 0
 	var/input_dir = 0
@@ -117,6 +113,9 @@
 
 /obj/machinery/mineral/processing_unit/New()
 	..()
+
+	ores_processing = list()
+	ores_stored = list()
 
 	// initialize static alloy_data list
 	if(!alloy_data)
@@ -153,7 +152,7 @@
 		if(--limit <= 0)
 			break
 		if(!isnull(ores_stored[O.material]))
-			ores_stored[O.material] ++
+			ores_stored[O.material]++
 		qdel(O)
 
 	if(!active)

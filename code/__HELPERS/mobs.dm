@@ -5,9 +5,6 @@
 	if(load && isliving(load))
 		return load
 
-/obj/mecha/get_mob()
-	return occupant
-
 /obj/vehicle/train/get_mob()
 	return buckled_mob
 
@@ -97,18 +94,6 @@
 		if(70 to INFINITY)	return "elderly"
 		else				return "unknown"
 
-/proc/get_body_build(gender, body_build = "Default")
-	if(gender == MALE)
-		if(body_build in male_body_builds)
-			return male_body_builds[body_build]
-		else
-			return male_body_builds["Default"]
-	else
-		if(body_build in female_body_builds)
-			return female_body_builds[body_build]
-		else
-			return female_body_builds["Default"]
-
 /proc/RoundHealth(health)
 	switch(health)
 		if(100 to INFINITY)
@@ -129,7 +114,6 @@
 			return "health0"
 		else
 			return "health-100"
-	return "0"
 
 /*
 Proc for attack log creation, because really why not

@@ -31,6 +31,8 @@ avoid code duplication. This includes items that may sometimes act as a standard
 
 //I would prefer to rename this to attack(), but that would involve touching hundreds of files.
 /obj/item/proc/resolve_attackby(atom/A, mob/user, params)
+	if(item_flags & ABSTRACT)//Abstract items cannot be interacted with. They're not real.
+		return 1
 	if (pre_attack(A, user, params))
 		return 1 //Returning 1 passes an abort signal upstream
 	add_fingerprint(user)
@@ -57,7 +59,7 @@ avoid code duplication. This includes items that may sometimes act as a standard
 /mob/living/attackby(obj/item/I, mob/living/user, var/params)
 	if(!ismob(user))
 		return FALSE
-	if(can_operate(src) && do_surgery(src, user, I)) //Surgery
+	if(can_operate(src, user) && do_surgery(src, user, I)) //Surgery
 		return TRUE
 	return I.attack(src, user, user.targeted_organ)
 

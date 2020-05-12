@@ -2,6 +2,14 @@
 /datum/reagent/drug
 	reagent_type = "Drug"
 
+	var/sanity_gain
+
+/datum/reagent/drug/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
+	if(sanity_gain)
+		var/mob/living/carbon/human/H = M
+		if(istype(H))
+			H.sanity.onDrug(src, effect_multiplier)
+
 
 /datum/reagent/drug/space_drugs
 	name = "Space drugs"
@@ -14,6 +22,7 @@
 	metabolism = REM * 0.5
 	overdose = REAGENTS_OVERDOSE
 	addiction_chance = 100
+	sanity_gain = 1.5
 
 /datum/reagent/drug/space_drugs/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
 	M.druggy = max(M.druggy, 15 * effect_multiplier)
@@ -22,6 +31,7 @@
 	if(prob(7 * effect_multiplier))
 		M.emote(pick("twitch", "drool", "moan", "giggle"))
 	M.add_chemical_effect(CE_PULSE, -1)
+	..()
 
 
 /datum/reagent/drug/serotrotium
@@ -35,10 +45,12 @@
 	overdose = REAGENTS_OVERDOSE
 	addiction_threshold = 20
 	addiction_chance = 10
+	sanity_gain = 1.5
 
 /datum/reagent/drug/serotrotium/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
 	if(prob(7 * effect_multiplier))
 		M.emote(pick("twitch", "drool", "moan", "gasp"))
+	..()
 
 
 /datum/reagent/drug/cryptobiolin
@@ -50,10 +62,12 @@
 	color = "#000055"
 	metabolism = REM * 0.5
 	overdose = REAGENTS_OVERDOSE
+	sanity_gain = 1
 
 /datum/reagent/drug/cryptobiolin/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
 	M.make_dizzy(4 * effect_multiplier)
 	M.confused = max(M.confused, 20 * effect_multiplier)
+	..()
 
 
 /datum/reagent/drug/impedrezene
@@ -64,6 +78,7 @@
 	reagent_state = LIQUID
 	color = "#C8A5DC"
 	overdose = REAGENTS_OVERDOSE
+	sanity_gain = 1
 
 /datum/reagent/drug/impedrezene/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
 	M.jitteriness = max(M.jitteriness - (5 * effect_multiplier), 0)
@@ -73,6 +88,7 @@
 		M.drowsyness = max(M.drowsyness, 3 * effect_multiplier)
 	if(prob(10))
 		M.emote("drool")
+	..()
 
 
 /datum/reagent/drug/mindbreaker
@@ -99,11 +115,12 @@
 	metabolism = REM * 0.5
 	addiction_chance = 10
 	nerve_system_accumulations = 40
-	reagent_type = "Drugs/Stimulator"
+	reagent_type = "Drug/Stimulator"
+	sanity_gain = 1.5
 
 /datum/reagent/drug/psilocybin/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
 	M.druggy = max(M.druggy, 30 * effect_multiplier)
-	
+
 	var/effective_dose = dose
 	if(issmall(M)) effective_dose *= 2
 	if(effective_dose < 1)
@@ -129,6 +146,8 @@
 		M.hallucination(100, 50)
 		if(prob(15))
 			M.emote(pick("twitch", "giggle"))
+
+	..()
 
 /datum/reagent/drug/nicotine
 	name = "Nicotine"
@@ -162,16 +181,16 @@
 	taste_description = "acid"
 	reagent_state = LIQUID
 	color = "#FF3300"
-	metabolism = REM * 0.15
+	metabolism = REM * 0.2
 	overdose = REAGENTS_OVERDOSE * 0.66
 	withdrawal_threshold = 10
-	nerve_system_accumulations = 70
+	nerve_system_accumulations = 55
 	reagent_type = "Drug/Stimulator"
 
 /datum/reagent/drug/hyperzine/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
 	if(prob(5))
 		M.emote(pick("twitch", "blink_r", "shiver"))
-	M.add_chemical_effect(CE_SPEEDBOOST, 1)
+	M.add_chemical_effect(CE_SPEEDBOOST, 0.6)
 	M.add_chemical_effect(CE_PULSE, 2)
 
 /datum/reagent/drug/hyperzine/withdrawal_act(mob/living/carbon/M)
@@ -193,7 +212,7 @@
 /datum/reagent/drug/sanguinum/affect_blood(mob/living/carbon/M, alien, effect_multiplier)
 	M.add_chemical_effect(CE_BLOODRESTORE, 1.6 * effect_multiplier)
 	if(prob(2))
-		spawn 
+		spawn
 			M.emote("me", 1, "coughs up blood!")
 		M.drip_blood(10)
 
@@ -201,17 +220,3 @@
 	M.stats.addTempStat(STAT_TGH, -STAT_LEVEL_BASIC, STIM_TIME, "sanguinum_w")
 	M.stats.addTempStat(STAT_COG, -STAT_LEVEL_BASIC, STIM_TIME, "sanguinum_w")
 	M.stats.addTempStat(STAT_ROB, -STAT_LEVEL_BASIC, STIM_TIME, "sanguinum_w")
-
-/datum/reagent/drug/sanguinum/overdose(var/mob/living/carbon/M, var/alien)
-	var/mob/living/carbon/human/H = M
-	if(istype(H))
-		var/list/obj/item/organ/external/bodyParts = locate(/obj/item/organ/external) in H.organs_by_name
-		var/chanceToRupture = 30
-		for(var/obj/item/organ/external/E in bodyParts)
-			if(E.has_internal_bleeding())
-				chanceToRupture -= 10
-		chanceToRupture = max(0,chanceToRupture)
-		if(prob(chanceToRupture))
-			var/list/obj/item/organ/external/unluckyPart = pick(bodyParts)
-			var/datum/wound/internal_bleeding/I = new (15)
-			unluckyPart.wounds += I

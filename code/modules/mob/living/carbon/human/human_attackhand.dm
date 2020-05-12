@@ -55,7 +55,9 @@
 
 	switch(M.a_intent)
 		if(I_HELP)
-			if(istype(H) && health < HEALTH_THRESHOLD_CRIT && health > HEALTH_THRESHOLD_DEAD)
+			if(can_operate(src, M) && do_surgery(src, M, null))
+				return 1
+			else if(istype(H) && health < HEALTH_THRESHOLD_CRIT && health > HEALTH_THRESHOLD_DEAD)
 				if(!H.check_has_mouth())
 					to_chat(H, SPAN_DANGER("You don't have a mouth, you cannot perform CPR!"))
 					return
@@ -87,7 +89,6 @@
 				H.visible_message(SPAN_DANGER("\The [H] performs CPR on \the [src]!"))
 				to_chat(src, SPAN_NOTICE("You feel a breath of fresh air enter your lungs. It feels good."))
 				to_chat(H, SPAN_WARNING("Repeat at least every 7 seconds."))
-
 			else
 				help_shake_act(M)
 			return 1
@@ -116,6 +117,9 @@
 			H.do_attack_animation(src)
 			playsound(loc, 'sound/weapons/thudswoosh.ogg', 50, 1, -1)
 			visible_message(SPAN_WARNING("[M] has grabbed [src] passively!"))
+			src.attack_log += "\[[time_stamp()]\] <font color='orange'>Has been grabbed passively by [M.name] ([M.ckey])</font>"
+			M.attack_log += "\[[time_stamp()]\] <font color='red'>Grabbed passively [src.name] ([src.ckey])</font>"
+			msg_admin_attack("[M] grabbed passively a [src].")
 			return 1
 
 		if(I_HURT)
@@ -231,6 +235,7 @@
 
 			// Finally, apply damage to target
 			damage_through_armor(real_damage, (attack.deal_halloss ? HALLOSS : BRUTE), affecting, ARMOR_MELEE, sharp = attack.sharp, edge = attack.edge)
+			hit_impact(real_damage, get_step(H, src))
 
 		if(I_DISARM)
 			if(M.stats.combat_style?.disarm_act())
@@ -294,12 +299,16 @@
 	user.attack_log += text("\[[time_stamp()]\] <font color='red'>attacked [src.name] ([src.ckey])</font>")
 	src.attack_log += text("\[[time_stamp()]\] <font color='orange'>was attacked by [user.name] ([user.ckey])</font>")
 	src.visible_message(SPAN_DANGER("[user] has [attack_message] [src]!"))
+
 	user.do_attack_animation(src)
 
 	var/dam_zone = pick(organs_by_name)
 	var/obj/item/organ/external/affecting = get_organ(ran_zone(dam_zone))
-	damage_through_armor(damage, BRUTE, affecting, ARMOR_MELEE)
+	var/dam = damage_through_armor(damage, BRUTE, affecting, ARMOR_MELEE)
+	if(dam > 0)
+		affecting.add_autopsy_data("[attack_message] by \a [user]", dam)
 	updatehealth()
+	hit_impact(damage, get_step(user, src))
 	return TRUE
 
 //Used to attack a joint through grabbing

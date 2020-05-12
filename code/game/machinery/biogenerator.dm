@@ -78,7 +78,7 @@
 			updateUsrDialog()
 	else if(processing)
 		to_chat(user, SPAN_NOTICE("\The [src] is currently processing."))
-	else if(istype(I, /obj/item/weapon/storage/bag/plants))
+	else if(istype(I, /obj/item/weapon/storage/bag/produce))
 		var/i = 0
 		for(var/obj/item/weapon/reagent_containers/food/snacks/grown/G in contents)
 			i++
@@ -198,7 +198,7 @@
 	if(!recipe)
 		return
 
-	if(!"allow_multiple" in recipe)
+	if(!("allow_multiple" in recipe))
 		amount = 1
 	else
 		amount = max(amount, 1)

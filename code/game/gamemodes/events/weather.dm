@@ -1,4 +1,3 @@
-#define DIRECT_OUTPUT(A, B) A << B
 #define SEND_SOUND(target, sound) DIRECT_OUTPUT(target, sound)
 //The effects of weather occur across an entire z-level. For instance, lavaland has periodic ash storms that scorch most unprotected creatures.
 
@@ -182,7 +181,6 @@ SUBSYSTEM_DEF(weather)
 				break
 	if (!ispath(weather_datum_type, /datum/weather))
 		CRASH("run_weather called with invalid weather_datum_type: [weather_datum_type || "null"]")
-		return
 
 	var/datum/weather/W = new weather_datum_type()
 	W.telegraph()

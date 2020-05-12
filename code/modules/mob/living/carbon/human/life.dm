@@ -75,7 +75,6 @@
 		if(!client)
 			species.handle_npc(src)
 
-
 	if(!handle_some_updates())
 		return											//We go ahead and process them 5 times for HUD images and other stuff though.
 
@@ -361,11 +360,12 @@
 			bodytemperature -= temperature_loss
 	else
 		var/loc_temp = T0C
-		if(istype(loc, /obj/mecha))
-			var/obj/mecha/M = loc
+		if(istype(loc, /mob/living/exosuit))
+			var/mob/living/exosuit/M = loc
 			loc_temp =  M.return_temperature()
 		else if(istype(loc, /obj/machinery/atmospherics/unary/cryo_cell))
-			loc_temp = loc:air_contents.temperature
+			var/obj/machinery/atmospherics/unary/cryo_cell/M = loc
+			loc_temp = M.air_contents.temperature
 		else
 			loc_temp = environment.temperature
 
@@ -786,6 +786,8 @@
 
 	if(health < (HEALTH_THRESHOLD_SOFTCRIT - src.stats.getStat(STAT_TGH)))// health 0 - stat makes you immediately collapse
 		shock_stage = max(shock_stage, 61)
+	else if(shock_resist)
+		shock_stage = min(shock_stage, 58)
 
 	if(traumatic_shock >= 80)
 		shock_stage += 1
@@ -795,6 +797,8 @@
 		shock_stage = min(shock_stage, 160)
 		shock_stage = max(shock_stage-1, 0)
 		return
+
+	sanity.onShock(shock_stage)
 
 	if(shock_stage == 10)
 		to_chat(src, "<span class='danger'>[pick("It hurts so much", "You really need some painkillers", "Dear god, the pain")]!</span>")
@@ -946,8 +950,9 @@
 		var/image/holder = hud_list[SPECIALROLE_HUD]
 		holder.icon_state = "hudblank"
 		if(mind && mind.antagonist.len != 0)
-			if(hud_icon_reference[mind.antagonist[1].role_text]) //only display the first antagonist role
-				holder.icon_state = hud_icon_reference[mind.antagonist[1].role_text]
+			var/datum/antagonist/antag = mind.antagonist[1]	//only display the first antagonist role
+			if(hud_icon_reference[antag.role_text]) 
+				holder.icon_state = hud_icon_reference[antag.role_text]
 			else
 				holder.icon_state = "hudsyndicate"
 			hud_list[SPECIALROLE_HUD] = holder
@@ -987,6 +992,7 @@
 		bodytemperature += round(BODYTEMP_HEATING_MAX*(1-thermal_protection), 1)
 
 /mob/living/carbon/human/rejuvenate()
+	sanity.setLevel(sanity.max_level)
 	restore_blood()
 	..()
 

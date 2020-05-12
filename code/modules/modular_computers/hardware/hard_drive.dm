@@ -1,66 +1,87 @@
 /obj/item/weapon/computer_hardware/hard_drive
 	name = "basic hard drive"
 	desc = "A small power efficient solid state drive for use in basic computers where power efficiency is desired."
-	power_usage = 25					// SSD or something with low power usage
 	icon_state = "hdd_normal"
+	power_usage = 25					// SSD or something with low power usage
 	hardware_size = 1
+	critical = TRUE
+	matter = list(MATERIAL_STEEL = 2, MATERIAL_PLASTIC = 1, MATERIAL_GLASS = 1)
 	origin_tech = list(TECH_DATA = 1, TECH_ENGINEERING = 1)
+	price_tag = 50
 	var/max_capacity = 128
 	var/used_capacity = 0
 	var/read_only = FALSE
 	var/list/stored_files = list()		// List of stored files on this drive. DO NOT MODIFY DIRECTLY!
 	var/list/default_files = list(		// List of files stored on this drive when spawned.
 		/datum/computer_file/program/computerconfig,
-		/datum/computer_file/program/ntnetdownload,
+		/datum/computer_file/program/downloader,
 		/datum/computer_file/program/filemanager
 	)
 
 
 /obj/item/weapon/computer_hardware/hard_drive/advanced
 	name = "advanced hard drive"
-	desc = "A small hybrid hard drive for use in higher grade computers where balance between power efficiency and capacity is desired."
-	max_capacity = 256
-	matter = list(MATERIAL_STEEL = 1, MATERIAL_PLASTIC = 1, MATERIAL_SILVER = 0.5)
-	origin_tech = list(TECH_DATA = 2, TECH_ENGINEERING = 2)
-	power_usage = 50 					// Hybrid, medium capacity and medium power storage
+	desc = "A hybrid hard drive for use in higher grade computers where balance between power efficiency and capacity is desired."
 	icon_state = "hdd_advanced"
+	max_capacity = 256
+	matter = list(MATERIAL_STEEL = 2, MATERIAL_PLASTIC = 1, MATERIAL_GLASS = 1, MATERIAL_SILVER = 2)
+	origin_tech = list(TECH_DATA = 2, TECH_ENGINEERING = 2)
+	price_tag = 100
+	power_usage = 50 					// Hybrid, medium capacity and medium power storage
 	hardware_size = 2
 
 /obj/item/weapon/computer_hardware/hard_drive/super
 	name = "super hard drive"
-	desc = "A small hard drive for use in cluster storage solutions where capacity is more important than power efficiency."
-	max_capacity = 512
-	origin_tech = list(TECH_DATA = 3, TECH_ENGINEERING = 3)
-	power_usage = 100					// High-capacity but uses lots of power, shortening battery life. Best used with APC link.
+	desc = "A hard drive for use in cluster storage solutions where capacity is more important than power efficiency."
 	icon_state = "hdd_super"
+	max_capacity = 512
+	matter = list(MATERIAL_STEEL = 2, MATERIAL_PLASTIC = 1, MATERIAL_GLASS = 1, MATERIAL_GOLD = 2)
+	origin_tech = list(TECH_DATA = 3, TECH_ENGINEERING = 3)
+	price_tag = 200
+	power_usage = 100					// High-capacity but uses lots of power, shortening battery life. Best used with APC link.
 	hardware_size = 2
 
 /obj/item/weapon/computer_hardware/hard_drive/cluster
 	name = "cluster hard drive"
 	desc = "A large storage cluster consisting of multiple hard drives for usage in high capacity storage systems."
+	icon_state = "hdd_cluster"
 	power_usage = 500
 	origin_tech = list(TECH_DATA = 4, TECH_ENGINEERING = 4)
+	price_tag = 500
 	max_capacity = 2048
-	icon_state = "hdd_cluster"
+	matter = list(MATERIAL_STEEL = 8, MATERIAL_PLASTIC = 4, MATERIAL_GLASS = 4, MATERIAL_GOLD = 8)
 	hardware_size = 3
 
 // For tablets, etc. - highly power efficient.
 /obj/item/weapon/computer_hardware/hard_drive/small
 	name = "small hard drive"
 	desc = "A small highly efficient solid state drive for portable devices."
+	matter = list(MATERIAL_STEEL = 1, MATERIAL_PLASTIC = 1, MATERIAL_GLASS = 1)
+	icon_state = "hdd_small"
 	power_usage = 10
 	origin_tech = list(TECH_DATA = 2, TECH_ENGINEERING = 2)
+	price_tag = 50
 	max_capacity = 64
-	icon_state = "hdd_small"
 	hardware_size = 1
+
+/obj/item/weapon/computer_hardware/hard_drive/small/adv
+	name = "small advanced hard drive"
+	desc = "An upgraded version of miniature hard drive used in portable devices."
+	matter = list(MATERIAL_STEEL = 1, MATERIAL_PLASTIC = 1, MATERIAL_GLASS = 1, MATERIAL_SILVER = 1)
+	power_usage = 20
+	origin_tech = list(TECH_DATA = 3, TECH_ENGINEERING = 3)
+	price_tag = 100
+	max_capacity = 128
 
 /obj/item/weapon/computer_hardware/hard_drive/micro
 	name = "micro hard drive"
 	desc = "A small micro hard drive for portable devices."
-	power_usage = 2
-	origin_tech = list(TECH_DATA = 1, TECH_ENGINEERING = 1)
-	max_capacity = 32
 	icon_state = "hdd_micro"
+	power_usage = 2
+	matter = list(MATERIAL_STEEL = 1, MATERIAL_GLASS = 1)
+	origin_tech = list(TECH_DATA = 1, TECH_ENGINEERING = 1)
+	price_tag = 25
+	max_capacity = 32
 	hardware_size = 1
 
 /obj/item/weapon/computer_hardware/hard_drive/Initialize()
@@ -68,8 +89,6 @@
 	install_default_files()
 
 /obj/item/weapon/computer_hardware/hard_drive/Destroy()
-	if(holder2 && (holder2.hard_drive == src))
-		holder2.hard_drive = null
 	stored_files = null
 	return ..()
 
@@ -82,6 +101,10 @@
 	// 999 is a byond limit that is in place. It's unlikely someone will reach that many files anyway, since you would sooner run out of space.
 	to_chat(user, "NT-NFS File Table Status: [stored_files.len]/999")
 	to_chat(user, "Storage capacity: [used_capacity]/[max_capacity]GQ")
+
+/obj/item/weapon/computer_hardware/hard_drive/disabled()
+	..()
+	holder2?.on_disk_disabled(src)
 
 // Use this proc to add file to the drive. Returns 1 on success and 0 on failure. Contains necessary sanity checks.
 /obj/item/weapon/computer_hardware/hard_drive/proc/store_file(datum/computer_file/F)
@@ -113,6 +136,11 @@
 		return FALSE
 
 	if(F in stored_files)
+		// If removed file is a program that's currently running, kill it
+		if(istype(F, /datum/computer_file/program) && holder2 && (F in holder2.all_threads))
+			var/datum/computer_file/program/PRG = F
+			PRG.event_file_removed()
+
 		stored_files -= F
 		recalculate_size()
 		return TRUE
@@ -205,6 +233,16 @@
 	return sanitizeSafe(D.stored_data, max_length = MAX_LNAME_LEN)
 
 
+/obj/item/weapon/computer_hardware/hard_drive/proc/set_autorun(program)
+	var/datum/computer_file/data/autorun = find_file_by_name("autorun")
+	if(!istype(autorun))
+		autorun = new /datum/computer_file/data
+		autorun.filename = "AUTORUN"
+		store_file(autorun)
+
+	autorun.stored_data = "[program]"
+
+
 // Disk UI data, used by file browser UI
 /obj/item/weapon/computer_hardware/hard_drive/ui_data()
 	var/list/data = list(
@@ -217,7 +255,7 @@
 	var/list/files = list()
 	for(var/datum/computer_file/F in stored_files)
 		files.Add(list(list(
-			"filename" = cyrillic_to_unicode(F.filename),
+			"filename" = F.filename,
 			"filetype" = F.filetype,
 			"size" = F.size,
 			"undeletable" = F.undeletable

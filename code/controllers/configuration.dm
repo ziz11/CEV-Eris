@@ -79,6 +79,8 @@ GLOBAL_LIST_EMPTY(storyteller_cache)
 	var/allow_drone_spawn = 1				//assuming the admin allow them to.
 	var/drone_build_time = 1200				//A drone will become available every X ticks since last drone spawn. Default is 2 minutes.
 
+	var/enable_mob_sleep = 1  //Experimental - make mobs sleep when no danger is present
+
 	var/disable_player_mice = 0
 	var/uneducated_mice = 0 //Set to 1 to prevent newly-spawned mice from understanding human speech
 
@@ -126,6 +128,7 @@ GLOBAL_LIST_EMPTY(storyteller_cache)
 
 	var/admin_legacy_system = 0	//Defines whether the server uses the legacy admin system with admins.txt or the SQL system. Config option in config.txt
 	var/ban_legacy_system = 0	//Defines whether the server uses the legacy banning system with the files in /data or the SQL system. Config option in config.txt
+	var/admin_memo_system = 0
 
 	var/simultaneous_pm_warning_timeout = 100
 
@@ -204,6 +207,8 @@ GLOBAL_LIST_EMPTY(storyteller_cache)
 
 	var/emojis = 0
 
+	var/random_submap_orientation = FALSE // If true, submaps loaded automatically can be rotated.
+
 	var/webhook_url
 	var/webhook_key
 
@@ -257,6 +262,9 @@ GLOBAL_LIST_EMPTY(storyteller_cache)
 
 				if ("ban_legacy_system")
 					config.ban_legacy_system = 1
+
+				if ("admin_memo_system")
+					config.admin_memo_system = 1
 
 				if ("use_recursive_explosions")
 					use_recursive_explosions = 1
@@ -634,6 +642,9 @@ GLOBAL_LIST_EMPTY(storyteller_cache)
 				if("starlight")
 					config.starlight = value ? value : 0
 
+				if("random_submap_orientation")
+					config.random_submap_orientation = 1
+
 				if("ert_species")
 					config.ert_species = splittext(value, ";")
 					if(!config.ert_species.len)
@@ -661,7 +672,10 @@ GLOBAL_LIST_EMPTY(storyteller_cache)
 
 				if("emojis")
 					config.emojis = 1
-				
+
+				if("enable_mob_sleep")
+					config.enable_mob_sleep = 1
+
 				if("webhook_key")
 					config.webhook_key = value
 
@@ -698,6 +712,9 @@ GLOBAL_LIST_EMPTY(storyteller_cache)
 
 				if("use_loyalty_implants")
 					config.use_loyalty_implants = 1
+
+
+
 
 				else
 					log_misc("Unknown setting in configuration: '[name]'")

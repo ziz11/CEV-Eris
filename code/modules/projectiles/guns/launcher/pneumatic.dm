@@ -1,6 +1,7 @@
 /obj/item/weapon/gun/launcher/pneumatic
 	name = "pneumatic cannon"
 	desc = "A large gas-powered cannon."
+	icon = 'icons/obj/guns/launcher/pneumatic.dmi'
 	icon_state = "pneumatic"
 	item_state = "pneumatic"
 	slot_flags = SLOT_BACK
@@ -9,6 +10,7 @@
 	fire_sound_text = "a loud whoosh of moving air"
 	fire_delay = 50
 	fire_sound = 'sound/weapons/tablehit1.ogg'
+	twohanded = TRUE
 
 	var/fire_pressure                                   // Used in fire checks/pressure checks.
 	var/max_w_class = ITEM_SIZE_NORMAL                                 // Hopper intake size.
@@ -126,10 +128,10 @@
 /obj/item/weapon/gun/launcher/pneumatic/update_icon()
 	if(tank)
 		icon_state = "pneumatic-tank"
-		item_state = "pneumatic-tank"
+		set_item_state("-tank")
 	else
 		icon_state = "pneumatic"
-		item_state = "pneumatic"
+		set_item_state(null)
 
 	update_wear_icon()
 

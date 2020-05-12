@@ -26,6 +26,7 @@
 
 
 /obj/machinery/smartfridge/secure
+	name = "\improper Secure SmartFridge"
 	is_secure = 1
 
 
@@ -35,19 +36,18 @@
 *   Seed Storage
 ********************/
 /obj/machinery/smartfridge/seeds
-	name = "\improper MegaSeed Servitor"
+	name = "\improper Refrigerated Seeds Storage"
 	desc = "When you need seeds fast!"
-	icon = 'icons/obj/vending.dmi'
-	icon_state = "seeds"
-	icon_on = "seeds"
-	icon_off = "seeds-off"
 
 /obj/machinery/smartfridge/seeds/accept_check(var/obj/item/O as obj)
 	if(istype(O,/obj/item/seeds/))
 		return 1
 	return 0
 
-
+/obj/machinery/smartfridge/kitchen
+	name = "\improper Agro-Club Fridge"
+	desc = "The panel says it won't allow anyone without access to the kitchen or hydroponics."
+	req_one_access = list(access_hydroponics,access_kitchen)
 
 
 
@@ -220,7 +220,7 @@
 	return ..()
 
 /obj/machinery/smartfridge/proc/accept_check(var/obj/item/O as obj)
-	if(istype(O,/obj/item/weapon/reagent_containers/food/snacks/grown/) || istype(O,/obj/item/seeds/))
+	if(istype(O,/obj/item/weapon/reagent_containers/food/snacks/grown/) || istype(O,/obj/item/seeds/) || istype(O,/obj/item/weapon/reagent_containers/food/snacks/meat/) || istype(O,/obj/item/weapon/reagent_containers/food/snacks/egg/))
 		return 1
 	return 0
 
@@ -312,9 +312,6 @@
 		to_chat(user, "You short out the product lock on [src].")
 		return 1
 
-/obj/machinery/smartfridge/attack_ai(mob/user as mob)
-	attack_hand(user)
-
 /obj/machinery/smartfridge/attack_hand(mob/user as mob)
 	if(stat & (NOPOWER|BROKEN))
 		return
@@ -345,7 +342,7 @@
 		var/K = item_quants[i]
 		var/count = item_quants[K]
 		if(count > 0)
-			items.Add(list(list("display_name" = rhtml_encode(capitalize(K)), "vend" = i, "quantity" = count)))
+			items.Add(list(list("display_name" = html_encode(capitalize(K)), "vend" = i, "quantity" = count)))
 
 	if(items.len > 0)
 		data["contents"] = items

@@ -1,4 +1,4 @@
-#define SEND_SIGNAL(target, sigtype, arguments...) ( !target.comp_lookup || !target.comp_lookup[sigtype] ? NONE : target._SendSignal(sigtype, list(target, ##arguments)) )
+#define SEND_SIGNAL(target, sigtype, arguments...) ( !target.comp_lookup || !target.comp_lookup[sigtype] ? NONE : target._SendSignal(sigtype, list(##arguments)) )
 
 #define SEND_GLOBAL_SIGNAL(sigtype, arguments...) ( SEND_SIGNAL(SSdcs, sigtype, ##arguments) )
 
@@ -24,6 +24,7 @@
 // These are signals which can be listened to by any component on any parent
 // start global signals with "!", this used to be necessary but now it's just a formatting choice
 //Example #define COMSIG_GLOB_NEW_Z "!new_z"								//from base of datum/controller/subsystem/mapping/proc/add_new_zlevel(): (list/args)
+#define COMSIG_GLOB_FABRIC_NEW "!fabric_new"                    //(image/fabric)
 
 //////////////////////////////////////////////////////////////////
 
@@ -35,6 +36,7 @@
 
 
 // /atom signals
+#define COMSIG_EXAMINE "examine"								//from atom/examine(): (mob/user, distance)
 
 // /area signals
 
@@ -44,19 +46,26 @@
 #define COMSIG_MOVABLE_MOVED "movable_moved"					//from base of atom/movable/Moved(): (/atom, origin_loc, new_loc)
 
 // /mob signals
+#define COMSIG_MOB_LIFE  "mob_life"                             //from mob/Life()
+#define COMSIG_MOB_LOGIN "mob_login"                            //from mob/Login()
 
 // /mob/living signals
 
 // /mob/living/carbon signals
 
 // /mob/living/carbon/human signals
+#define COMSIG_HUMAN_SAY "human_say"                            //from mob/living/carbon/human/say(): (message)
 
 // /datum/species signals
 
 // /obj signals
 
 // /obj/item signals
-
+#define COMSIG_IATTACK "item_attack"									//from /mob/ClickOn(): (/atom, /src, /params) If any reply to this returns TRUE, overrides attackby and afterattack
+#define COMSIG_ATTACKBY "attack_by"										//from /mob/ClickOn():
+#define COMSIG_APPVAL "apply_values"									//from /atom/refresh_upgrades(): (/src) Called to upgrade specific values
+#define COMSIG_ADDVAL "add_values" 										//from /atom/refresh_upgrades(): (/src) Called to add specific things to the /src, called before COMSIG_APPVAL
+#define COMSIG_REMOVE "uninstall"										//from  /obj/item/weapon/tool/attackby(): Called to remove an upgrade
 // /obj/item/clothing signals
 
 // /obj/item/implant signals

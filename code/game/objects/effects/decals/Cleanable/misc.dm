@@ -30,7 +30,7 @@
 	for(var/mob/living/carbon/l in range(4))
 		if(prob(2))
 			to_chat(l, SPAN_WARNING("Your skin itches."))
-		l.apply_effect(2, IRRADIATE)		
+		l.apply_effect(2, IRRADIATE)
 
 /obj/effect/decal/cleanable/dirt
 	name = "dirt"
@@ -52,9 +52,9 @@
 	random_rotation = FALSE
 
 /obj/effect/decal/cleanable/reagents/proc/add_reagents(var/datum/reagents/reagents_to_add)
-	var/space_to_add = reagents_to_add.total_volume - reagents.get_free_space() 
-	if(space_to_add > 0)
-		create_reagents(space_to_add, TRUE)
+	if(!reagents)
+		create_reagents(reagents_to_add.total_volume)
+
 	reagents_to_add.trans_to_holder(reagents, reagents_to_add.total_volume)
 
 /obj/effect/decal/cleanable/reagents/New(var/datum/reagents/reagents_to_add = null)
@@ -125,7 +125,7 @@
 	desc = "It looks like a melted... something."
 	density = FALSE
 	anchored = TRUE
-	layer = 3
+	layer = OBJ_LAYER
 	icon = 'icons/obj/chemical.dmi'
 	icon_state = "molten"
 
@@ -134,7 +134,7 @@
 	desc = "Somebody should remove that."
 	density = FALSE
 	anchored = TRUE
-	layer = 3
+	layer = ABOVE_OBJ_LAYER
 	icon = 'icons/effects/effects.dmi'
 	icon_state = "cobweb2"
 
@@ -149,6 +149,7 @@
 	icon_state = "vomit_1"
 	random_icon_states = list("vomit_1", "vomit_2", "vomit_3", "vomit_4")
 	var/list/viruses = list()
+	sanity_damage = 1
 
 	Destroy()
 		. = ..()

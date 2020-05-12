@@ -21,6 +21,7 @@
 #define ANTAG_RANDSPAWN         0x100 // Potentially randomly spawns due to events.
 #define ANTAG_VOTABLE           0x200 // Can be voted as an additional antagonist before roundstart.
 #define ANTAG_SET_APPEARANCE    0x400 // Causes antagonists to use an appearance modifier on spawn.
+#define ANTAG_RANDOM_EXCEPTED	0x800 // If a game mode randomly selects antag types, antag types with this flag should be excluded.
 
 //A flag to skip target selection
 #define ANTAG_SKIP_TARGET	-1
@@ -37,6 +38,7 @@
 #define ROLE_BANTYPE_CHANGELING ROLE_CHANGELING
 #define ROLE_BANTYPE_XENOS ROLE_XENOMORPH
 #define ROLE_BANTYPE_CREW_SIDED "crew_sided"
+#define ROLE_BANTYPE_BLITZ ROLE_BLITZ
 
 // antag template macros.
 #define ROLE_BORER "borer"
@@ -60,10 +62,15 @@
 #define ROLE_INQUISITOR "inquisitor"
 #define ROLE_SECDOC_DEFENDER "secdoc_defender"
 
+#define ROLE_BLITZ "blitzshell"
+
 #define FACTION_EXCELSIOR "excelsior"
 #define FACTION_BORERS "borers"
 #define FACTION_XENOMORPHS "xenomorphs"
 #define FACTION_SERBS	"serbians"
+
+#define ROLES_CONTRACT list(ROLE_TRAITOR,ROLE_CHANGELING,ROLE_BLITZ)
+#define ROLES_UPLINK_BASE list(ROLE_TRAITOR,ROLE_MARSHAL,ROLE_INQUISITOR,ROLE_MERCENARY)
 
 #define ROLESET_TRAITOR "traitor"
 #define ROLESET_VERSUS_TRAITOR "double_agents"

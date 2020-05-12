@@ -1,7 +1,7 @@
 /obj/machinery/portable_atmospherics/hydroponics
 	name = "hydroponics tray"
 	icon = 'icons/obj/hydroponics_machines.dmi'
-	icon_state = "hydrotray3"
+	icon_state = "hydrotray"
 	density = 1
 	anchored = 1
 	reagent_flags = OPENCONTAINER
@@ -122,6 +122,10 @@
 		"radium" =  8,
 		"mutagen" = 15
 		)
+	
+	var/global/list/potency_reagents = list(
+		"diethylamine" =    2
+	)
 
 /obj/machinery/portable_atmospherics/hydroponics/AltClick()
 	if(mechanical && !usr.incapacitated() && Adjacent(usr))
@@ -204,6 +208,9 @@
 				health += beneficial_reagents[R.id][1]       * reagent_total
 				yield_mod += beneficial_reagents[R.id][2]    * reagent_total
 				mutation_mod += beneficial_reagents[R.id][3] * reagent_total
+			//potency reagents boost the plats genetic potency, tweaking needed
+			if(potency_reagents[R.id])
+				seed.set_trait(TRAIT_POTENCY, TRAIT_POTENCY + (potency_reagents[R.id][1] * reagent_total * 0.5))
 
 			// Mutagen is distinct from the previous types and mostly has a chance of proccing a mutation.
 			if(mutagenic_reagents[R.id])
@@ -305,7 +312,7 @@
 		return
 
 	// Check if we should even bother working on the current seed datum.
-	if(seed.mutants. && seed.mutants.len && severity > 1)
+	if(seed.mutants && seed.mutants.len && severity > 1)
 		mutate_species()
 		return
 
@@ -508,11 +515,11 @@
 		else
 			to_chat(user, SPAN_DANGER("\The [src] already has seeds in it!"))
 
-	else if (istype(I, /obj/item/weapon/storage/bag/plants))
+	else if (istype(I, /obj/item/weapon/storage/bag/produce))
 
 		attack_hand(user)
 
-		var/obj/item/weapon/storage/bag/plants/S = I
+		var/obj/item/weapon/storage/bag/produce/S = I
 		for (var/obj/item/weapon/reagent_containers/food/snacks/grown/G in locate(user.x,user.y,user.z))
 			if(!S.can_be_inserted(G))
 				return

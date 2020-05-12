@@ -101,6 +101,9 @@
 	reciever.afterattack(target, owner.mob, FALSE)
 
 /datum/click_handler/fullauto/MouseDown(object,location,control,params)
+	if(!isturf(owner.mob.loc)) // This stops from firing full auto weapons inside closets or in /obj/effect/dummy/chameleon chameleon projector
+		return FALSE
+	
 	object = resolve_world_target(object)
 	if (object)
 		target = object
@@ -158,7 +161,7 @@
 		to_chat(user, "No! You dead!")
 		user.kill_CH()
 		return 0
-	if (istype(user.loc, /obj/mecha))
+	if (istype(user.loc, /mob/living/exosuit))
 		to_chat(user, "Cannot use [handler_name] in mecha!")
 		user.kill_CH()
 		return 0
@@ -209,13 +212,6 @@
 /datum/click_handler/changeling/changeling_transformation_sting/use_ability(mob/living/carbon/human/user,atom/target)
 	..()
 	return user.changeling_transformation_sting(target, chosen_dna)
-
-/datum/click_handler/changeling/changeling_unfat_sting
-	handler_name = "Unfat Sting"
-
-/datum/click_handler/changeling/changeling_unfat_sting/use_ability(mob/living/carbon/human/user,atom/target)
-	..()
-	return user.changeling_unfat_sting(target)
 
 /datum/click_handler/changeling/changeling_DEATHsting
 	handler_name = "Death Sting"

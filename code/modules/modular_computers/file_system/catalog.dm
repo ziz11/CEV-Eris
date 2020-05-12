@@ -8,24 +8,6 @@
 
 	TODO: add access level that will show more info
 */
-/datum
-	var/catalog_info_level_one
-	var/catalog_info_level_two
-	var/catalog_info_level_three
-	var/catalog_info_level_four
-	var/catalog_info_level_ooc
-
-/atom
-	// should this atom have catalog entry
-	// this is set to FALSE for not gameplay atoms like areas, landmarks etc
-	var/contribute_to_catalog = TRUE
-	// this will add atom to can_be_found reagent entry
-	// this is set to FALSE for things like beakers and pills 
-	var/contribute_to_reagent_catalog = TRUE
-	// this will add atom to can_be_found storage item enry
-	var/contribute_to_container_catalog = TRUE
-	// will create icon asset that will be send to players
-	var/create_icon_asset = TRUE
 
 GLOBAL_LIST_EMPTY(catalogs)
 GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
@@ -45,7 +27,7 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 				create_catalog_entry(D, CATALOG_CHEMISTRY)
 	// second run to add decompose results
 	for(var/V in chemical_reagents_list)
-		var/datum/reagent/D = chemical_reagents_list[V]	
+		var/datum/reagent/D = chemical_reagents_list[V]
 		if(D.heating_products && D.heating_point)
 			for(var/id in D.heating_products)
 				var/datum/catalog_entry/reagent/E = get_catalog_entry(get_reagent_type_by_id(id))
@@ -57,13 +39,13 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 				var/datum/catalog_entry/reagent/E = get_catalog_entry(D.type)
 				if(E)
 					E.add_decomposition_from(D.type)
-			
+
 	var/datum/catalog/C = GLOB.catalogs[CATALOG_REAGENTS]
 	C.associated_template = "catalog_list_reagents.tmpl"
 	C.entry_list = sortTim(C.entry_list, /proc/cmp_catalog_entry_asc)
 	C = GLOB.catalogs[CATALOG_CHEMISTRY]
 	C.associated_template = "catalog_list_reagents.tmpl"
-	C.entry_list = sortTim(C.entry_list, /proc/cmp_catalog_entry_asc)
+	C.entry_list = sortTim(C.entry_list, /proc/cmp_catalog_entry_chem)
 	C = GLOB.catalogs[CATALOG_DRINKS]
 	C.associated_template = "catalog_list_drinks.tmpl"
 	C.entry_list = sortTim(C.entry_list, /proc/cmp_catalog_entry_asc)
@@ -84,8 +66,9 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 		else if(istype(thing, /atom))
 			GLOB.all_catalog_entries_by_type[thing.type] = new /datum/catalog_entry/atom(thing)
 		else
-			if(!GLOB.catalogs[catalog_id].len)
-				qdel(GLOB.catalogs[catalog_id])
+			var/list/element = GLOB.catalogs[catalog_id]
+			if(!element.len)
+				qdel(element)
 				GLOB.catalogs.Remove(catalog_id)
 				return FALSE
 			error("Unsupported type passed to /proc/create_catalog_entry()")
@@ -102,7 +85,6 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 /proc/get_catalog_entry(var/type)
 	if(GLOB.all_catalog_entries_by_type[type])
 		return GLOB.all_catalog_entries_by_type[type]
-	error("Catalog Entry with type [type] was not found.")
 
 /datum/catalog
 	var/id
@@ -141,16 +123,10 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 	var/description
 	var/associated_template
 	var/thing_nature 	// reagent/weapon/device/etc.
-	var/list/can_be_found_in = list()
 
 /datum/catalog_entry/New(var/datum/V)
 	thing_type = V.type
-	catalog_info_level_one = V.catalog_info_level_one
-	catalog_info_level_two = V.catalog_info_level_two
-	catalog_info_level_three = V.catalog_info_level_three
-	catalog_info_level_four = V.catalog_info_level_four
-	catalog_info_level_ooc = V.catalog_info_level_ooc
-	
+
 /datum/catalog_entry/proc/search_value(var/value)
 	if(findtext(title, value))
 		return TRUE
@@ -161,14 +137,7 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 	var/list/data = list()
 	data["id"] = thing_type
 	data["thing_nature"] = thing_nature
-	
-	data["catalog_info_level_one"] = catalog_info_level_one
-	data["catalog_info_level_two"] = catalog_info_level_two
-	data["catalog_info_level_three"] = catalog_info_level_three
-	data["catalog_info_level_four"] = catalog_info_level_four
-	data["catalog_info_level_ooc"] = catalog_info_level_ooc
 
-	data["can_be_found_in"] = can_be_found_in.len ? can_be_found_in : null
 	return data
 
 // this used to get ui_data for list
@@ -198,6 +167,7 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 	var/scannable
 	var/overdose
 	var/addiction_chance
+	var/addiction_threshold
 	var/list/recipe_data
 	var/list/result_of_decomposition_in
 	var/list/can_be_used_in
@@ -224,14 +194,7 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 			return
 	can_be_used_in.Add(reagent_type)
 
-/datum/catalog_entry/proc/add_to_can_be_found(var/atom/A)
-	for(var/V in can_be_found_in)
-		var/list/L = V
-		if(is_associative(L) && L["type"] == A.type)
-			return
-	can_be_found_in.Add(list(list("type" = A.type)))
-
-/datum/catalog_entry/reagent/New(var/datum/reagent/V)
+/datum/catalog_entry/reagent/New(datum/reagent/V)
 	if(!istype(V))
 		error("wrong usage of [src.type]")
 		qdel(src)
@@ -261,8 +224,8 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 			dat["types"] += get_reagent_type_by_id(id)
 		chilling_decompose = dat
 		chilling_point = V.chilling_point
-		
-	scannable = V.scannable ? "Yes" : "No"
+
+	scannable = V.scannable
 	overdose = V.overdose ? V.overdose : null
 	var/list/recipes = GLOB.chemical_reactions_list_by_result[V.id]
 	if(recipes)
@@ -279,7 +242,8 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 	taste = "Has [V.taste_mult > 1 ? "strong" : V.taste_mult < 1 ? "weak" : ""] taste of [V.taste_description]."
 	color = "[V.color]"
 	if(V.addiction_threshold || V.addiction_chance)
-		addiction_chance = "Has [V.addiction_threshold ? "high" : V.addiction_chance <= 10 ? "low" : V.addiction_chance <= 25 ? "moderate" : "high"] addicition chance."
+		addiction_chance = V.addiction_threshold ? "high" : V.addiction_chance <= 10 ? "Low" : V.addiction_chance <= 25 ? "Moderate" : "High"
+		addiction_threshold = V.addiction_threshold
 
 /datum/catalog_entry/reagent/catalog_ui_data(mob/user, ui_key = "main")
 	var/list/data = ..()
@@ -312,7 +276,8 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 	data["description"] = description
 	data["taste"] = taste
 	data["color"] = color
-	data["addiction_chance"] = addiction_chance 
+	data["addiction_chance"] = addiction_chance
+	data["addiction_threshold"] = addiction_threshold
 
 	return data
 
@@ -329,7 +294,7 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 	description = V.desc
 	thing_nature = "Atom"
 	image_path = getAtomCacheFilename(V)
-	
+
 
 /datum/catalog_entry/atom/ui_data(mob/user, ui_key = "main")
 	var/list/data = ..()
@@ -340,12 +305,6 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 
 	// DESCRIPTION
 	data["description"] = description
-	data["catalog_info_level_one"] = catalog_info_level_one
-	data["catalog_info_level_two"] = catalog_info_level_two
-	data["catalog_info_level_three"] = catalog_info_level_three
-	data["catalog_info_level_four"] = catalog_info_level_four
-	data["catalog_info_level_ooc"] = catalog_info_level_ooc
-	data["can_be_found_in"] = can_be_found_in.len ? can_be_found_in : null
 	return data
 
 
@@ -380,7 +339,7 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 		if(D.nutrition)
 			nutrition = D.nutrition > 1 ? "High" : "Low"
 		thing_nature = "Drink"
-		
+
 	else if(istype(V, /datum/reagent/ethanol))
 		var/datum/reagent/ethanol/E = V
 		if(E.adj_temp)
@@ -389,7 +348,7 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 			nutrition = E.nutriment_factor > 1 ? "High" : "Low"
 		strength = E.strength <= 15 ? "Light" : E.strength <= 50 ? "Strong" : "Knocking out"
 		thing_nature = "Alchohol drink"
-	
+
 	var/list/recipes = GLOB.chemical_reactions_list_by_result[V.id]
 	if(recipes)
 		recipe_data = list()
@@ -412,10 +371,4 @@ GLOBAL_LIST_EMPTY(all_catalog_entries_by_type)
 
 	// DESCRIPTION
 	data["description"] = description
-	data["catalog_info_level_one"] = catalog_info_level_one
-	data["catalog_info_level_two"] = catalog_info_level_two
-	data["catalog_info_level_three"] = catalog_info_level_three
-	data["catalog_info_level_four"] = catalog_info_level_four
-	data["catalog_info_level_ooc"] = catalog_info_level_ooc
-	data["can_be_found_in"] = can_be_found_in.len ? can_be_found_in : null
 	return data

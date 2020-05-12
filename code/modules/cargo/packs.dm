@@ -130,7 +130,7 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 
 /datum/supply_pack/fsenergy
 	name = "FS Energy Weapons"
-	contains = list(/obj/item/weapon/gun/energy/pulse/cassad,
+	contains = list(/obj/item/weapon/gun/energy/plasma/cassad,
 				/obj/item/weapon/gun/energy/gun,
 				/obj/item/weapon/gun/energy/gun,
 				/obj/item/weapon/gun/energy/gun/martin,
@@ -143,7 +143,7 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 /datum/supply_pack/fssmall
 	name = "FS Handgun Pack"
 	contains = list(/obj/item/weapon/gun/projectile/colt,
-			/obj/item/weapon/gun/projectile/IH_sidearm,
+			/obj/item/weapon/gun/projectile/paco,
 			/obj/item/weapon/gun/projectile/clarissa,
 			/obj/item/weapon/gun/projectile/olivaw)
 	cost = 3000
@@ -151,11 +151,21 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 	crate_name = "FS Handgun Pack"
 	group = "Security"
 
+/datum/supply_pack/fsrevolver
+	name = "FS Revolver Pack"
+	contains = list(/obj/item/weapon/gun/projectile/revolver/havelock,
+					/obj/item/weapon/gun/projectile/revolver/havelock,
+					/obj/item/weapon/gun/projectile/revolver/consul)
+	cost = 3300
+	containertype = /obj/structure/closet/crate/secure/weapon
+	crate_name = "FS Revolver Pack"
+	group = "Security"
+
 /datum/supply_pack/fsassault
 	name = "FS Assault Pack"
 	contains = list(/obj/item/weapon/gun/projectile/automatic/ak47/fs,
-			/obj/item/weapon/gun/projectile/automatic/idaho,
-			/obj/item/weapon/gun/projectile/automatic/idaho)
+			/obj/item/weapon/gun/projectile/automatic/atreides,
+			/obj/item/weapon/gun/projectile/automatic/atreides)
 	cost = 6000
 	containertype = /obj/structure/closet/crate/secure/weapon
 	crate_name = "FS Assault Pack"
@@ -192,8 +202,8 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 					/obj/item/clothing/suit/armor/vest/security,
 					/obj/item/clothing/suit/armor/vest/detective,
 					/obj/item/clothing/suit/storage/vest,
-					/obj/item/clothing/head/helmet,
-					/obj/item/clothing/head/helmet)
+					/obj/item/clothing/head/armor/helmet,
+					/obj/item/clothing/head/armor/helmet)
 	cost = 1500
 	containertype = /obj/structure/closet/crate/secure
 	crate_name = "IH Surplus Amor"
@@ -213,12 +223,12 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 					/obj/item/weapon/handcuffs,
 					/obj/item/weapon/handcuffs,
 					/obj/item/weapon/handcuffs,
-					/obj/item/clothing/head/helmet/riot,
-					/obj/item/clothing/suit/armor/riot,
-					/obj/item/clothing/head/helmet/riot,
-					/obj/item/clothing/suit/armor/riot,
-					/obj/item/clothing/head/helmet/riot,
-					/obj/item/clothing/suit/armor/riot)
+					/obj/item/clothing/head/armor/riot_hud,
+					/obj/item/clothing/suit/armor/heavy/riot,
+					/obj/item/clothing/head/armor/riot_hud,
+					/obj/item/clothing/suit/armor/heavy/riot,
+					/obj/item/clothing/head/armor/riot_hud,
+					/obj/item/clothing/suit/armor/heavy/riot)
 	cost = 6100
 	containertype = /obj/structure/closet/crate/secure
 	crate_name = "IH Riot gear crate"
@@ -236,8 +246,8 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 	name = "IH Ballistic Armor"
 	contains = list(/obj/item/clothing/suit/armor/bulletproof,
 					/obj/item/clothing/suit/armor/bulletproof,
-					/obj/item/clothing/head/helmet,
-					/obj/item/clothing/head/helmet)
+					/obj/item/clothing/head/armor/helmet,
+					/obj/item/clothing/head/armor/helmet)
 	cost = 3000
 	containertype = /obj/structure/closet/crate/secure
 	crate_name = "FS Close Quarters Pack"
@@ -283,8 +293,8 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 	name = "IH Ablative Armor"
 	contains = list(/obj/item/clothing/suit/armor/laserproof,
 					/obj/item/clothing/suit/armor/laserproof,
-					/obj/item/clothing/head/helmet,
-					/obj/item/clothing/head/helmet)
+					/obj/item/clothing/head/armor/helmet,
+					/obj/item/clothing/head/armor/helmet)
 	cost = 3500
 	containertype = /obj/structure/closet/crate/secure
 	crate_name = "IH Ablative Armor crate"
@@ -526,7 +536,7 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 
 /datum/supply_pack/electrical
 	name = "Electrical maintenance crate"
-	contains = list (/obj/item/weapon/storage/toolbox/electrical,
+	contains = list(/obj/item/weapon/storage/toolbox/electrical,
 					/obj/item/weapon/storage/toolbox/electrical,
 					/obj/item/clothing/gloves/insulated,
 					/obj/item/clothing/gloves/insulated,
@@ -568,6 +578,15 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 	cost = 1500
 	containertype = /obj/structure/closet/crate
 	crate_name = "Tool upgrade Crate"
+	group = "Engineering"
+
+/datum/supply_pack/omnitool
+	contains = list(/obj/item/weapon/tool/omnitool,
+					/obj/item/weapon/tool/omnitool)
+	name = "\"Munchkin 5000\" omnitool"
+	cost = 2500
+	containertype = /obj/structure/closet/crate
+	crate_name = "omnitool crate"
 	group = "Engineering"
 
 /datum/supply_pack/fueltank
@@ -652,27 +671,64 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 	containertype = /obj/structure/closet/crate/secure
 	crate_name = "Particle Accelerator crate"
 
+
 /datum/supply_pack/mecha_ripley
-	name = "Circuit Crate (\"Ripley\" APLU)"
-	contains = list(/obj/item/weapon/book/manual/ripley_build_and_repair,
-					/obj/item/weapon/circuitboard/mecha/ripley/main, //TEMPORARY due to lack of circuitboard printer
-					/obj/item/weapon/circuitboard/mecha/ripley/peripherals) //TEMPORARY due to lack of circuitboard printer
+	name = "exosuit assembly crate (\"Ripley\" APLU)"
+	contains = list(
+		/obj/item/mech_equipment/drill,
+		/obj/item/mech_equipment/clamp,
+		/obj/item/mech_equipment/light,
+		/obj/item/mech_component/sensors,
+		/obj/item/mech_component/control_module,
+		/obj/item/mech_component/chassis,
+		/obj/item/mech_component/manipulators/powerloader,
+		/obj/item/mech_component/propulsion/powerloader,
+		/obj/item/robot_parts/robot_component/armour/exosuit
+	)
 	cost = 3000
 	containertype = /obj/structure/closet/crate/secure/scisecurecrate
-	crate_name = "APLU \"Ripley\" Circuit Crate"
-	access = access_robotics
+	crate_name = "standart exosuit assembly crate"
+	group = "Engineering"
+/*
+/datum/supply_pack/mecha_ripley
+	name = "exosuit assembly crate (\"Ripley\" APLU)"
+	contains = list(
+		/obj/item/mech_equipment/drill,
+		/obj/item/mech_equipment/clamp,
+		/obj/item/weapon/circuitboard/mecha/main,
+		/obj/item/weapon/circuitboard/mecha/peripherals,
+		/obj/item/mech_component/chassis,
+		/obj/item/mech_component/part/ripley_torso,
+		/obj/item/mech_component/part/ripley_left_arm,
+		/obj/item/mech_component/part/ripley_right_arm,
+		/obj/item/mech_component/part/ripley_left_leg,
+		/obj/item/mech_component/part/ripley_right_leg
+	)
+	cost = 3000
+	containertype = /obj/structure/closet/crate/secure/scisecurecrate
+	crate_name = "APLU \"Ripley\" exosuit assembly crate"
 	group = "Engineering"
 
 /datum/supply_pack/mecha_odysseus
-	name = "Circuit Crate (\"Odysseus\")"
-	contains = list(/obj/item/weapon/circuitboard/mecha/odysseus/peripherals, //TEMPORARY due to lack of circuitboard printer
-					/obj/item/weapon/circuitboard/mecha/odysseus/main) //TEMPORARY due to lack of circuitboard printer
-	cost = 2500
+	name = "exosuit assembly crate (\"Odysseus\")"
+	contains = list(
+		/obj/item/mech_equipment/tool/syringe_gun,
+		/obj/item/mech_equipment/tool/sleeper,
+		/obj/item/weapon/circuitboard/mecha/main,
+		/obj/item/weapon/circuitboard/mecha/peripherals,
+		/obj/item/mech_component/chassis/odysseus,
+		/obj/item/mech_component/part/odysseus_head,
+		/obj/item/mech_component/part/odysseus_torso,
+		/obj/item/mech_component/part/odysseus_left_arm,
+		/obj/item/mech_component/part/odysseus_right_arm,
+		/obj/item/mech_component/part/odysseus_left_leg,
+		/obj/item/mech_component/part/odysseus_right_leg
+	)
+	cost = 3000
 	containertype = /obj/structure/closet/crate/secure/scisecurecrate
-	crate_name = "\"Odysseus\" Circuit Crate"
-	access = access_robotics
+	crate_name = "\"Odysseus\" exosuit assembly crate"
 	group = "Engineering"
-
+*/
 /datum/supply_pack/robotics
 	name = "Robotics assembly crate"
 	contains = list(/obj/item/device/assembly/prox_sensor,
@@ -807,8 +863,8 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 	crate_name = "Coolant tank crate"
 	group = "Medical / Science"
 
-/datum/supply_pack/phoron
-	name = "Phoron assembly crate"
+/datum/supply_pack/plasma
+	name = "Plasma assembly crate"
 	contains = list(/obj/item/weapon/tank/plasma,
 					/obj/item/weapon/tank/plasma,
 					/obj/item/weapon/tank/plasma,
@@ -823,7 +879,7 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 					/obj/item/device/assembly/timer)
 	cost = 1500
 	containertype = /obj/structure/closet/crate/secure/scisecurecrate
-	crate_name = "Phoron assembly crate"
+	crate_name = "Plasma assembly crate"
 	access = access_tox_storage
 	group = "Medical / Science"
 
@@ -925,8 +981,8 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 					/obj/item/weapon/reagent_containers/spray/plantbgone,
 					/obj/item/weapon/reagent_containers/glass/bottle/ammonia,
 					/obj/item/weapon/reagent_containers/glass/bottle/ammonia,
-					/obj/item/weapon/material/hatchet,
-					/obj/item/weapon/material/minihoe,
+					/obj/item/weapon/tool/hatchet,
+					/obj/item/weapon/tool/minihoe,
 					/obj/item/device/scanner/plant,
 					/obj/item/clothing/gloves/botanic_leather,
 					/obj/item/clothing/suit/apron) // Updated with new things
@@ -1302,7 +1358,7 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
                 /obj/random/gun_energy_cheap,
                 /obj/random/gun_shotgun)
 	name = "Surplus Weaponry"
-	cost = 2000
+	cost = 5000
 	crate_name = "Surplus Weapons Crate"
 	containertype = /obj/structure/closet/crate/secure/weapon
 	group = "Security"
@@ -1337,8 +1393,19 @@ var/list/all_supply_groups = list("Operations","Security","Hospitality","Enginee
 	group = "Operations"
 
 
+/datum/supply_pack/randomised/holsters
+	num_contained = 4
+	contains = list(/obj/random/cloth/holster,
+					/obj/random/cloth/holster,
+					/obj/random/cloth/holster,
+					/obj/random/cloth/holster)
+	name = "Surplus Unform Holsters"
+	cost = 1000
+	crate_name = "Surplus Uniform Holsters Crate"
+	containertype = /obj/structure/closet/crate
+	group = "Operations"
 
-datum/supply_pack/randomised/voidsuit
+/datum/supply_pack/randomised/voidsuit
 	num_contained = 1
 	contains = list(/obj/random/voidsuit,
 					/obj/random/voidsuit/damaged)
@@ -1348,7 +1415,7 @@ datum/supply_pack/randomised/voidsuit
 	containertype = /obj/structure/closet/crate
 	group = "Operations"
 
-datum/supply_pack/randomised/rig
+/datum/supply_pack/randomised/rig
 	num_contained = 1
 	contains = list(/obj/random/rig,
 					/obj/random/rig/damaged)
@@ -1358,7 +1425,7 @@ datum/supply_pack/randomised/rig
 	containertype = /obj/structure/closet/crate
 	group = "Operations"
 
-datum/supply_pack/randomised/rigmods
+/datum/supply_pack/randomised/rigmods
 	num_contained = 2
 	contains = list(/obj/random/rig_module,
 				/obj/random/rig_module)

@@ -28,7 +28,6 @@
 			R.fields["x"] = S.x
 			R.fields["y"] = S.y
 			known_sectors[S.name] = R
-	..()
 
 /obj/machinery/computer/helm/Process()
 	..()
@@ -67,6 +66,7 @@
 	return 0
 
 /obj/machinery/computer/helm/attack_hand(var/mob/user as mob)
+
 	if(..())
 		user.unset_machine()
 		manual_control = 0
@@ -211,7 +211,6 @@
 			if (isAI(usr))
 				usr.reset_view(usr.eyeobj)
 
-	add_fingerprint(usr)
 	updateUsrDialog()
 
 

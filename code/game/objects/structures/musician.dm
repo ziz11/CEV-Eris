@@ -227,13 +227,15 @@
 					if(!playing || !anchored)//If the piano is playing, or is loose
 						playing = 0
 						return
-					if(lentext(note) == 0)
+					if(length(note) == 0)
 						continue
 					var/cur_note = text2ascii(note) - 96
 					if(cur_note < 1 || cur_note > 7)
 						continue
-					for(var/i=2 to lentext(note))
-						var/ni = copytext(note,i,i+1)
+					var/notelen = length(note)
+					var/ni = ""
+					for(var/i = length(note[1]) + 1, i <= notelen, i += length(ni))
+						ni = note[i]
 						if(!text2num(ni))
 							if(ni == "#" || ni == "b" || ni == "n")
 								cur_acc[cur_note] = ni
@@ -335,12 +337,12 @@
 				spawn() playsong()
 
 		else if(href_list["newline"])
-			var/newline = rhtml_encode(input("Enter your line: ", "Piano") as text|null)
+			var/newline = html_encode(input("Enter your line: ", "Piano") as text|null)
 			if(!newline)
 				return
 			if(song.lines.len > 200)
 				return
-			if(lentext(newline) > 50)
+			if(length(newline) > 50)
 				newline = copytext(newline, 1, 50)
 			song.lines.Add(newline)
 
@@ -352,10 +354,10 @@
 
 		else if(href_list["modifyline"])
 			var/num = round(text2num(href_list["modifyline"]),1)
-			var/content = rhtml_encode(input("Enter your line: ", "Piano", song.lines[num]) as text|null)
+			var/content = html_encode(input("Enter your line: ", "Piano", song.lines[num]) as text|null)
 			if(!content)
 				return
-			if(lentext(content) > 50)
+			if(length(content) > 50)
 				content = copytext(content, 1, 50)
 			if(num > song.lines.len || num < 1)
 				return
@@ -373,15 +375,15 @@
 		else if(href_list["import"])
 			var/t = ""
 			do
-				t = rhtml_encode(input(usr, "Please paste the entire song, formatted:", text("[]", src.name), t)  as message)
+				t = html_encode(input(usr, "Please paste the entire song, formatted:", text("[]", src.name), t)  as message)
 				if (!in_range(src, usr))
 					return
 
-				if(lentext(t) >= 12000)
+				if(length(t) >= 12000)
 					var/cont = input(usr, "Your message is too long! Would you like to continue editing it?", "", "yes") in list("yes", "no")
 					if(cont == "no")
 						break
-			while(lentext(t) > 12000)
+			while(length(t) > 12000)
 
 			//split into lines
 			spawn()
@@ -395,7 +397,7 @@
 					lines.Cut(201)
 				var/linenum = 1
 				for(var/l in lines)
-					if(lentext(l) > 50)
+					if(length(l) > 50)
 						to_chat(usr, SPAN_WARNING("Line [linenum] too long!"))
 						lines.Remove(l)
 					else

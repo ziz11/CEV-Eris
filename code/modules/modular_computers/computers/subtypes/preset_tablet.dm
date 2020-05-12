@@ -12,7 +12,7 @@
 	tesla_link = new/obj/item/weapon/computer_hardware/tesla_link(src)
 	hard_drive = new/obj/item/weapon/computer_hardware/hard_drive/small(src)
 	network_card = new/obj/item/weapon/computer_hardware/network_card/advanced(src)
-	nano_printer = new/obj/item/weapon/computer_hardware/nano_printer(src)
+	printer = new/obj/item/weapon/computer_hardware/printer(src)
 	card_slot = new/obj/item/weapon/computer_hardware/card_slot(src)
 
 /obj/item/modular_computer/tablet/preset/custom_loadout/standard/install_default_hardware()
@@ -24,9 +24,7 @@
 
 /obj/item/modular_computer/tablet/preset/custom_loadout/install_default_programs()
 	..()
-	var/mob/living/carbon/human/H = get(src, /mob)
-	if(!istype(H)) return
-	install_default_programs_by_job(H)
+	install_default_programs_by_job(get(src, /mob/living/carbon/human))
 	hard_drive.store_file(new/datum/computer_file/program/wordprocessor())
 
 //Map presets
@@ -37,7 +35,7 @@
 	tesla_link = new/obj/item/weapon/computer_hardware/tesla_link(src)
 	hard_drive = new/obj/item/weapon/computer_hardware/hard_drive(src)
 	network_card = new/obj/item/weapon/computer_hardware/network_card/advanced(src)
-	nano_printer = new/obj/item/weapon/computer_hardware/nano_printer(src)
+	printer = new/obj/item/weapon/computer_hardware/printer(src)
 	card_slot = new/obj/item/weapon/computer_hardware/card_slot(src)
 	cell = new/obj/item/weapon/cell/small(src)
 	scanner = new /obj/item/weapon/computer_hardware/scanner/paper(src)
@@ -57,7 +55,7 @@
 	tesla_link = new/obj/item/weapon/computer_hardware/tesla_link(src)
 	hard_drive = new/obj/item/weapon/computer_hardware/hard_drive(src)
 	network_card = new/obj/item/weapon/computer_hardware/network_card(src)
-	nano_printer = new/obj/item/weapon/computer_hardware/nano_printer(src)
+	printer = new/obj/item/weapon/computer_hardware/printer(src)
 	cell = new /obj/item/weapon/cell/small(src)
 	scanner = new /obj/item/weapon/computer_hardware/scanner/paper(src)
 	gps_sensor = new /obj/item/weapon/computer_hardware/gps_sensor(src)
@@ -79,7 +77,7 @@
 	tesla_link = new/obj/item/weapon/computer_hardware/tesla_link(src)
 	hard_drive = new/obj/item/weapon/computer_hardware/hard_drive(src)
 	network_card = new/obj/item/weapon/computer_hardware/network_card(src)
-	nano_printer = new/obj/item/weapon/computer_hardware/nano_printer(src)
+	printer = new/obj/item/weapon/computer_hardware/printer(src)
 	cell = new /obj/item/weapon/cell/small(src)
 	scanner = new /obj/item/weapon/computer_hardware/scanner/paper(src)
 	gps_sensor = new /obj/item/weapon/computer_hardware/gps_sensor(src)

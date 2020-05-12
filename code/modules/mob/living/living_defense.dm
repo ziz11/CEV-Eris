@@ -43,20 +43,21 @@
 
 	//No armor? Damage as usual
 	if(armor_effectiveness == 0)
-		apply_damage(effective_damage, damagetype, def_zone, used_weapon, sharp, edge)
+		apply_damage(effective_damage, damagetype, def_zone, sharp, edge, used_weapon)
 
 	//Here we split damage in two parts, where armor value will determine how much damage will get through
 	else
 		//Pain part of the damage, that simulates impact from armor absorbtion
 		//For balance purposes, it's lowered by ARMOR_AGONY_COEFFICIENT
-		var/agony_gamage = round( ( effective_damage * armor_effectiveness * ARMOR_AGONY_COEFFICIENT ) / 100 )
-		stun_effect_act(0, agony_gamage, def_zone)
+		if(!(damagetype == HALLOSS ))
+			var/agony_gamage = round( ( effective_damage * armor_effectiveness * ARMOR_AGONY_COEFFICIENT ) / 100 )
+			apply_effect(agony_gamage, AGONY)
 
 		//Actual part of the damage that passed through armor
 		var/actual_damage = round ( ( effective_damage * ( 100 - armor_effectiveness ) ) / 100 )
-		apply_damage(actual_damage, damagetype, def_zone, used_weapon, sharp, edge)
-
-	return TRUE
+		apply_damage(actual_damage, damagetype, def_zone, sharp, edge, used_weapon)
+		return actual_damage
+	return effective_damage
 
 
 //if null is passed for def_zone, then this should return something appropriate for all zones (e.g. area effect damage)
@@ -64,7 +65,15 @@
 	return 0
 
 
+/mob/living/proc/hit_impact(damage, dir)
+	if(incapacitated(INCAPACITATION_DEFAULT|INCAPACITATION_BUCKLED_PARTIALLY))
+		return
+	shake_animation(damage)
+
+
 /mob/living/bullet_act(var/obj/item/projectile/P, var/def_zone)
+	var/hit_dir = get_dir(P, src)
+
 	if (P.is_hot() >= HEAT_MOBIGNITE_THRESHOLD)
 		IgniteMob()
 
@@ -83,9 +92,20 @@
 		qdel(P)
 		return TRUE
 
+	if(P.knockback && hit_dir)
+		throw_at(get_edge_target_turf(src, hit_dir), P.knockback, P.knockback)
+
 	//Armor and damage
 	if(!P.nodamage)
-		damage_through_armor(P.damage, P.damage_type, def_zone, P.check_armour, armour_pen = P.armor_penetration, used_weapon = P, sharp=is_sharp(P), edge=has_edge(P))
+		hit_impact(P.get_structure_damage(), hit_dir)
+		for(var/damage_type in P.damage_types)
+			var/damage = P.damage_types[damage_type]
+			damage_through_armor(damage, damage_type, def_zone, P.check_armour, armour_pen = P.armor_penetration, used_weapon = P, sharp=is_sharp(P), edge=has_edge(P))
+
+	if(P.agony > 0 && istype(P,/obj/item/projectile/bullet))
+		hit_impact(P.agony, hit_dir)
+		damage_through_armor(P.agony, HALLOSS, def_zone, P.check_armour, armour_pen = P.armor_penetration, used_weapon = P, sharp = is_sharp(P), edge = has_edge(P))
+
 
 	P.on_hit(src, def_zone)
 	return TRUE
@@ -212,7 +232,7 @@
 					src.anchored = 1
 					src.pinned += O
 
-/mob/living/proc/embed(var/obj/O, var/def_zone=null)
+/mob/living/proc/embed(var/obj/item/O, var/def_zone=null)
 	if(ismob(O.loc))
 		var/mob/living/L = O.loc
 		if(!L.unEquip(O, src))
@@ -221,6 +241,7 @@
 	src.embedded += O
 	src.visible_message("<span class='danger'>\The [O] embeds in the [src]!</span>")
 	src.verbs += /mob/proc/yank_out_object
+	O.on_embed(src)
 
 //This is called when the mob is thrown into a dense turf
 /mob/living/proc/turf_collision(var/turf/T, var/speed)
@@ -313,7 +334,6 @@
 
 /mob/living/proc/reagent_permeability()
 	return 1
-	return round(FIRESUIT_MAX_HEAT_PROTECTION_TEMPERATURE*(fire_stacks/FIRE_MAX_FIRESUIT_STACKS)**2)
 
 /mob/living/proc/handle_actions()
 	//Pretty bad, i'd use picked/dropped instead but the parent calls in these are nonexistent

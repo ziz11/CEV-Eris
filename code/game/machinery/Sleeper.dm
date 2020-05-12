@@ -120,9 +120,6 @@
 	playsound(loc, 'sound/machines/button.ogg', 100, 1)
 	return 1
 
-/obj/machinery/sleeper/attack_ai(var/mob/user)
-	return attack_hand(user)
-
 /obj/machinery/sleeper/attackby(var/obj/item/I, var/mob/user)
 	add_fingerprint(user)
 	if(istype(I, /obj/item/weapon/reagent_containers/glass))
@@ -198,7 +195,7 @@
 	if(occupant.client)
 		occupant.client.eye = occupant.client.mob
 		occupant.client.perspective = MOB_PERSPECTIVE
-	occupant.loc = loc
+	occupant.forceMove(get_turf(src))
 	occupant = null
 	for(var/atom/movable/A in src) // In case an object was dropped inside or something
 		if(A == beaker)

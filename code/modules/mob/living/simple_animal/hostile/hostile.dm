@@ -20,6 +20,7 @@ var/list/mydirs = list(NORTH, SOUTH, EAST, WEST, SOUTHWEST, NORTHWEST, NORTHEAST
 	var/ranged_ignores_vision
 	stop_automated_movement_when_pulled = 0
 	var/destroy_surroundings = 1
+	var/fire_verb = "fires"
 	a_intent = I_HURT
 	can_burrow = TRUE
 	hunger_enabled = 0//Until automated eating mechanics are enabled, disable hunger for hostile mobs
@@ -53,13 +54,6 @@ var/list/mydirs = list(NORTH, SOUTH, EAST, WEST, SOUTHWEST, NORTHWEST, NORTHEAST
 					stance = HOSTILE_STANCE_ATTACK
 					T = L
 					break
-
-		else if(istype(A, /obj/mecha)) // Our line of sight stuff was already done in ListTargets().
-			var/obj/mecha/M = A
-			if (M.occupant)
-				stance = HOSTILE_STANCE_ATTACK
-				T = M
-				break
 
 		if(istype(A, /obj/machinery/bot))
 			var/obj/machinery/bot/B = A
@@ -159,8 +153,8 @@ var/list/mydirs = list(NORTH, SOUTH, EAST, WEST, SOUTHWEST, NORTHWEST, NORTHEAST
 		var/mob/living/L = target_mob
 		L.attack_generic(src,rand(melee_damage_lower,melee_damage_upper),attacktext)
 		return L
-	if(istype(target_mob,/obj/mecha))
-		var/obj/mecha/M = target_mob
+	if(istype(target_mob,/mob/living/exosuit))
+		var/mob/living/exosuit/M = target_mob
 		M.attack_generic(src,rand(melee_damage_lower,melee_damage_upper),attacktext)
 		return M
 	if(istype(target_mob,/obj/machinery/bot))
@@ -181,7 +175,7 @@ var/list/mydirs = list(NORTH, SOUTH, EAST, WEST, SOUTHWEST, NORTHWEST, NORTHEAST
 /mob/living/simple_animal/hostile/proc/ListTargets(var/dist = 7)
 	var/list/L = hearers(src, dist)
 
-	for (var/obj/mecha/M in mechas_list)
+	for (var/mob/living/exosuit/M in mechas_list)
 		if (M.z == src.z && get_dist(src, M) <= dist)
 			L += M
 
@@ -194,30 +188,31 @@ var/list/mydirs = list(NORTH, SOUTH, EAST, WEST, SOUTHWEST, NORTHWEST, NORTHEAST
 /mob/living/simple_animal/hostile/Life()
 
 	. = ..()
-	if(!.)
-		walk(src, 0)
-		return 0
-	if(client)
-		return 0
+	if(!stasis && !AI_inactive)
+		if(!.)
+			walk(src, 0)
+			return 0
+		if(client)
+			return 0
 
-	if(!stat)
-		switch(stance)
-			if(HOSTILE_STANCE_IDLE)
-				target_mob = FindTarget()
+		if(!stat)
+			switch(stance)
+				if(HOSTILE_STANCE_IDLE)
+					target_mob = FindTarget()
 
-			if(HOSTILE_STANCE_ATTACK)
-				if(destroy_surroundings)
-					DestroySurroundings()
-				MoveToTarget()
+				if(HOSTILE_STANCE_ATTACK)
+					if(destroy_surroundings)
+						DestroySurroundings()
+					MoveToTarget()
 
-			if(HOSTILE_STANCE_ATTACKING)
-				if(destroy_surroundings)
-					DestroySurroundings()
-				AttackTarget()
+				if(HOSTILE_STANCE_ATTACKING)
+					if(destroy_surroundings)
+						DestroySurroundings()
+					AttackTarget()
 
 /mob/living/simple_animal/hostile/proc/OpenFire(target_mob)
 	var/target = target_mob
-	visible_message("\red <b>[src]</b> fires at [target]!", 1)
+	visible_message("\red <b>[src]</b> [fire_verb] at [target]!", 1)
 
 	if(rapid)
 		spawn(1)

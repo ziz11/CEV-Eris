@@ -101,16 +101,14 @@
 	if(!can_interact(usr))
 		return
 
-	if(active_program)
-		active_program.event_idremoved(0)
-
-	for(var/datum/computer_file/program/P in idle_threads)
-		P.event_idremoved(1)
+	for(var/p in all_threads)
+		var/datum/computer_file/program/PRG = p
+		PRG.event_id_removed()
 
 	card_slot.stored_card.forceMove(get_turf(src))
 	if(!issilicon(user))
 		user.put_in_hands(card_slot.stored_card)
-	to_chat(user, "You remove [card_slot.stored_card] from [src].")
+	to_chat(user, SPAN_NOTICE("You remove [card_slot.stored_card] from [src]."))
 	card_slot.stored_card = null
 	update_uis()
 	update_verbs()
@@ -126,7 +124,7 @@
 
 	var/obj/item/weapon/computer_hardware/hard_drive/portable/PD = portable_drive
 
-	uninstall_component(user, portable_drive)
+	uninstall_component(portable_drive, user)
 	user.put_in_hands(PD)
 	update_uis()
 
@@ -202,8 +200,8 @@
 		return
 
 	if(istype(W, /obj/item/weapon/paper) || istype(W, /obj/item/weapon/paper_bundle))
-		if(nano_printer)
-			nano_printer.attackby(W, user)
+		if(printer)
+			printer.attackby(W, user)
 	if(istype(W, /obj/item/device/aicard))
 		if(!ai_slot)
 			return
@@ -213,7 +211,7 @@
 		return ..()
 
 	if(istype(W, suitable_cell) || istype(W, /obj/item/weapon/computer_hardware))
-		try_install_component(user, W)
+		try_install_component(W, user)
 
 
 
@@ -266,7 +264,7 @@
 					var/obj/item/weapon/computer_hardware/H = find_hardware_by_name(choice)
 					if(!H)
 						return
-					uninstall_component(user, H)
+					uninstall_component(H, user)
 					return
 	..()
 

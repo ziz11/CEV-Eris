@@ -111,7 +111,10 @@ SUBSYSTEM_DEF(job)
 		if(jobban_isbanned(player, job.title))
 			Debug("GRJ isbanned failed, Player: [player], Job: [job.title]")
 			continue
-
+		var/datum/category_item/setup_option/core_implant/I = player.client.prefs.get_option("Core implant")
+		// cant be Neotheology without a cruciform
+		if(job.department == DEPARTMENT_CHURCH && istype(I.implant_type,/obj/item/weapon/implant/core_implant/cruciform))
+			continue
 		if((job.current_positions < job.spawn_positions) || job.spawn_positions == -1)
 			Debug("GRJ Random job given, Player: [player], Job: [job]")
 			AssignRole(player, job.title)
@@ -303,6 +306,7 @@ SUBSYSTEM_DEF(job)
 	var/datum/job_flavor/flavor = pick(job.random_flavors)
 
 	if(job)
+		H.job = rank
 
 		//Equip custom gear loadout.
 		//var/list/custom_equip_slots = list() //If more than one item takes the same slot, all after the first one spawn in storage.
@@ -310,26 +314,32 @@ SUBSYSTEM_DEF(job)
 
 		//Equip job items and language stuff
 		job.setup_account(H)
-		// EMAIL GENERATION
-		if(rank != "Robot" && rank != "AI")		//These guys get their emails later.
-			var/domain
-			var/desired_name
-			domain = pick(maps_data.usable_email_tlds)
-			desired_name = H.real_name
-			ntnet_global.create_email(H, desired_name, domain)
-		// END EMAIL GENERATION
+
 		job.equip(H, flavor ? flavor.title : H.mind ? H.mind.role_alt_title : "")
+
+		//loadout items.
+		if(spawn_in_storage)
+			for(var/datum/gear/G in spawn_in_storage)
+				G.spawn_in_storage_or_drop(H, H.client.prefs.Gear()[G.display_name])
+
 		job.add_stats(H, flavor)
 		job.add_additiional_language(H)
 
-
 		job.apply_fingerprints(H)
+
+		//loadout items.
 		spawn_in_storage = EquipCustomLoadout(H, job)
+
+		if(spawn_in_storage)
+			for(var/datum/gear/G in spawn_in_storage)
+				G.spawn_in_storage_or_drop(H, H.client.prefs.Gear()[G.display_name])
+
+		// EMAIL GENERATION
+		if(rank != "Robot" && rank != "AI")		//These guys get their emails later.
+			ntnet_global.create_email(H, H.real_name, pick(maps_data.usable_email_tlds))
 
 	else
 		to_chat(H, "Your job is [rank] and the game just can't handle it! Please report this bug to an administrator.")
-
-	H.job = rank
 
 	// If they're head, give them the account info for their department
 	if(H.mind && (job.head_position || job.department_account_access))
@@ -338,7 +348,7 @@ SUBSYSTEM_DEF(job)
 		if(department_account)
 			remembered_info += "<b>Your department's account number is:</b> #[department_account.account_number]<br>"
 			remembered_info += "<b>Your department's account pin is:</b> [department_account.remote_access_pin]<br>"
-			remembered_info += "<b>Your department's account funds are:</b> [CREDS][department_account.money]<br>"
+			remembered_info += "<b>Your department's account funds are:</b> [department_account.money][CREDS]<br>"
 		if(job.head_position)
 			remembered_info += "<b>Your part of nuke code:</b> [SSticker.get_next_nuke_code_part()]<br>"
 			department_account.owner_name = H.real_name //Register them as the point of contact for this account
@@ -358,11 +368,6 @@ SUBSYSTEM_DEF(job)
 			if("Captain")
 				var/sound/announce_sound = (SSticker.current_state <= GAME_STATE_SETTING_UP)? null : sound('sound/misc/boatswain.ogg', volume=20)
 				captain_announcement.Announce("All hands, Captain [H.real_name] on deck!", new_sound=announce_sound)
-
-	//loadout items.
-	if(spawn_in_storage)
-		for(var/datum/gear/G in spawn_in_storage)
-			G.spawn_in_storage_or_drop(H, H.client.prefs.Gear()[G.display_name])
 
 	if(istype(H)) //give humans wheelchairs, if they need them.
 		var/obj/item/organ/external/l_leg = H.get_organ(BP_L_LEG)
@@ -394,6 +399,12 @@ SUBSYSTEM_DEF(job)
 	if(C)
 		C.install_default_modules_by_job(job)
 		C.access.Add(job.cruciform_access)
+
+	var/obj/item/weapon/oddity/secdocs/D
+	if(D.inv_spawn_count > 0 && prob(5) && !(locate(/obj/item/weapon/oddity/secdocs) in H.get_contents()))
+		D = new
+		if(H.equip_to_storage(D))
+			--D.inv_spawn_count
 
 	BITSET(H.hud_updateflag, ID_HUD)
 	BITSET(H.hud_updateflag, SPECIALROLE_HUD)

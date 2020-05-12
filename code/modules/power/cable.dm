@@ -57,7 +57,7 @@ var/list/possible_cable_coil_colours = list(
 	return PN.draw_power(amount)
 
 /obj/structure/cable/yellow
-	color = COLOR_AMBER
+	color = COLOR_YELLOW
 
 /obj/structure/cable/green
 	color = COLOR_GREEN
@@ -188,7 +188,7 @@ var/list/possible_cable_coil_colours = list(
 	else if(istype(I, /obj/item/weapon/tool/multitool))
 
 		if(powernet && (powernet.avail > 0))		// is it powered?
-			to_chat(user, SPAN_WARNING("[powernet.avail]W in power network."))
+			to_chat(user, SPAN_WARNING("[power_to_text(powernet.avail)] in power network."))
 
 		else
 			to_chat(user, SPAN_WARNING("The cable is not powered."))
@@ -627,7 +627,6 @@ obj/structure/cable/proc/cableColor(var/colorC)
 		src.use(15)
 	else
 		to_chat(usr, "\blue You cannot do that.")
-	..()
 
 /obj/item/stack/cable_coil/cyborg/verb/set_colour()
 	set name = "Change Colour"

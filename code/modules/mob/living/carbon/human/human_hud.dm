@@ -16,8 +16,7 @@
 		recreate_flag = TRUE
 
 	if(recreate_flag)
-		H.destroy_HUD()
-		H.create_HUD()
+		H.reset_HUD()
 
 
 	H.show_HUD()
@@ -62,6 +61,10 @@
 			if(HUDdatum.HUDneed[p]["minloc"])
 				HUD.screen_loc = HUDdatum.HUDneed[p]["minloc"]
 
+		for (var/p in H.HUDtech)
+			var/obj/screen/HUD = H.HUDtech[p]
+			if(HUDdatum.HUDoverlays[p]["minloc"])
+				HUD.screen_loc = HUDdatum.HUDoverlays[p]["minloc"]
 
 		for (var/obj/screen/inventory/HUDinv in H.HUDinventory)
 			HUDinv.underlays.Cut()
@@ -80,6 +83,10 @@
 			if (HUDdatum.HUDneed[p]["background"])
 				HUD.underlays += HUDdatum.IconUnderlays[HUDdatum.HUDneed[p]["background"]]
 			HUD.screen_loc = HUDdatum.HUDneed[p]["loc"]
+
+		for (var/p in H.HUDtech)
+			var/obj/screen/HUD = H.HUDtech[p]
+			HUD.screen_loc = HUDdatum.HUDoverlays[p]["loc"]
 
 		for (var/obj/screen/inventory/HUDinv in H.HUDinventory)
 			for (var/p in H.species.hud.gear)
@@ -130,11 +137,7 @@
 
 
 /mob/living/carbon/human/create_HUD()
-
-	create_HUDinventory()
-	create_HUDneed()
-	create_HUDfrippery()
-	create_HUDtech()
+	. = ..()
 	recolor_HUD(src.client.prefs.UI_style_color, src.client.prefs.UI_style_alpha)
 	return
 
@@ -191,11 +194,11 @@
 
 	//Добавляем Элементы ХУДа (украшения)
 	for (var/list/whistle in HUDdatum.HUDfrippery)
-		var/obj/screen/frippery/perdelka = new (whistle["icon_state"],whistle["loc"],H)
-		perdelka.icon = HUDdatum.icon
+		var/obj/screen/frippery/F = new (whistle["icon_state"],whistle["loc"],H)
+		F.icon = HUDdatum.icon
 		if(whistle["hideflag"])
-			perdelka.hideflag = whistle["hideflag"]
-		H.HUDfrippery += perdelka
+			F.hideflag = whistle["hideflag"]
+		H.HUDfrippery += F
 	return
 
 /mob/living/carbon/human/create_HUDtech()
@@ -206,7 +209,7 @@
 	for (var/techobject in HUDdatum.HUDoverlays)
 		var/HUDtype = HUDdatum.HUDoverlays[techobject]["type"]
 
-		var/obj/screen/HUD = new HUDtype(techobject,H, HUDdatum.HUDoverlays[techobject]["loc"],\
+		var/obj/screen/HUD = new HUDtype(techobject,H,\
 		 HUDdatum.HUDoverlays[techobject]["icon"] ? HUDdatum.HUDoverlays[techobject]["icon"] : null,\
 		 HUDdatum.HUDoverlays[techobject]["icon_state"] ? HUDdatum.HUDoverlays[techobject]["icon_state"] : null)
 		HUD.layer = FLASH_LAYER

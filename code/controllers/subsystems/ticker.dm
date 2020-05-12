@@ -241,6 +241,9 @@ SUBSYSTEM_DEF(ticker)
 
 		for(var/mob/new_player/N in SSmobs.mob_list)
 			N.new_player_panel_proc()
+
+		generate_contracts(min(6 + round(minds.len / 5), 12))
+		addtimer(CALLBACK(src, .proc/contract_tick), 15 MINUTES)
 	//start_events() //handles random events and space dust.
 	//new random event system is handled from the MC.
 
@@ -364,6 +367,25 @@ SUBSYSTEM_DEF(ticker)
 		if(player.mind)
 			SSticker.minds |= player.mind
 
+/datum/controller/subsystem/ticker/proc/generate_contracts(count)
+	var/list/candidates = subtypesof(/datum/antag_contract)
+	while(count--)
+		while(candidates.len)
+			var/contract_type = pick(candidates)
+			var/datum/antag_contract/C = new contract_type
+			if(!C.can_place())
+				candidates -= contract_type
+				qdel(C)
+				continue
+			C.place()
+			if(C.unique)
+				candidates -= contract_type
+			break
+
+/datum/controller/subsystem/ticker/proc/contract_tick()
+	generate_contracts(1)
+	addtimer(CALLBACK(src, .proc/contract_tick), 15 MINUTES)
+
 
 /datum/controller/subsystem/ticker/proc/equip_characters()
 	var/captainless = TRUE
@@ -424,15 +446,10 @@ SUBSYSTEM_DEF(ticker)
 				robolist += "[robo.name][robo.stat?" (Deactivated) (Played by: [robo.key]), ":" (Played by: [robo.key]), "]"
 			to_chat(world, "[robolist]")
 
-	var/dronecount = 0
+
 
 	for(var/mob/living/silicon/robot/robo in SSmobs.mob_list)
-
-		if(isdrone(robo))
-			dronecount++
-			continue
-
-		if(!robo.connected_ai)
+		if(!isdrone(robo) && !robo.connected_ai)
 			if(robo.stat != 2)
 				to_chat(world, "<b>[robo.name] (Played by: [robo.key]) survived as an AI-less synthetic! Its laws were:</b>")
 			else
@@ -440,7 +457,7 @@ SUBSYSTEM_DEF(ticker)
 
 			if(robo) //How the hell do we lose robo between here and the world messages directly above this?
 				robo.laws.show_laws(world)
-
+	var/dronecount = GLOB.drones.len
 	if(dronecount)
 		to_chat(world, "<b>There [dronecount>1 ? "were" : "was"] [dronecount] industrious maintenance [dronecount>1 ? "drones" : "drone"] at the end of this round.</b>")
 

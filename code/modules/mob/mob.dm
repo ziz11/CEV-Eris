@@ -13,6 +13,9 @@
 	..()
 	return QDEL_HINT_HARDDEL
 
+/mob/proc/despawn()
+	return
+
 /mob/get_fall_damage(var/turf/from, var/turf/dest)
 	return 0
 
@@ -148,6 +151,7 @@
 
 
 /mob/proc/Life()
+	SEND_SIGNAL(src, COMSIG_MOB_LIFE)
 //	if(organStructure)
 //		organStructure.ProcessOrgans()
 	//handle_typing_indicator() //You said the typing indicator would be fine. The test determined that was a lie.
@@ -346,7 +350,7 @@
 	set src in usr
 	if(usr != src)
 		to_chat(usr, "No.")
-	var/msg = sanitize(input(usr,"Set the flavor text in your 'examine' verb. Can also be used for OOC notes about your character.","Flavor Text",rhtml_decode(flavor_text)) as message|null, extra = 0)
+	var/msg = sanitize(input(usr,"Set the flavor text in your 'examine' verb. Can also be used for OOC notes about your character.","Flavor Text",html_decode(flavor_text)) as message|null, extra = 0)
 
 	if(msg != null)
 		flavor_text = msg
@@ -355,10 +359,10 @@
 	if (flavor_text && flavor_text != "")
 		var/msg = trim(replacetext(flavor_text, "\n", " "))
 		if(!msg) return ""
-		if(lentext(msg) <= 40)
-			return "<font color='blue'>[russian_to_cp1251(msg)]</font>"
+		if(length(msg) <= 40)
+			return "<font color='blue'>[msg]</font>"
 		else
-			return "<font color='blue'>[copytext_preserve_html(russian_to_cp1251(msg), 1, 37)]... <a href='byond://?src=\ref[src];flavor_more=1'>More...</a></font>"
+			return "<font color='blue'>[copytext_preserve_html(msg, 1, 37)]... <a href='byond://?src=\ref[src];flavor_more=1'>More...</a></font>"
 
 /*
 /mob/verb/help()
@@ -497,7 +501,7 @@
 		if(src in view(usr))
 			var/dat = {"
 				<html><head><title>[name]</title></head>
-				<body><tt>[cp1251_to_utf8(replacetext(flavor_text, "\n", "<br>"))]</tt></body>
+				<body><tt>[replacetext(flavor_text, "\n", "<br>")]</tt></body>
 				</html>
 			"}
 			usr << browse(dat, "window=[name];size=500x200")
@@ -517,8 +521,8 @@
 				if(e && H.lying)
 					if(((e.status & ORGAN_BROKEN && !(e.status & ORGAN_SPLINTED)) || e.status & ORGAN_BLEEDING) && (H.getBruteLoss() + H.getFireLoss() >= 100))
 						return 1
-						break
-		return 0
+		else
+			return 0
 
 /mob/MouseDrop(mob/M as mob)
 	..()
@@ -891,11 +895,10 @@ All Canmove setting in this proc is temporary. This var should not be set from h
 		flick("weak_pain", HUDtech["pain"])
 
 
-/mob/proc/get_visible_implants(var/class = 0)
+/mob/proc/get_visible_implants()
 	var/list/visible_implants = list()
 	for(var/obj/item/O in embedded)
-		if(O.w_class > class)
-			visible_implants += O
+		visible_implants += O
 	return visible_implants
 
 /mob/proc/embedded_needs_process()
@@ -927,7 +930,7 @@ mob/proc/yank_out_object()
 	if(S == U)
 		self = 1 // Removing object from yourself.
 
-	valid_objects = get_visible_implants(0)
+	valid_objects = get_visible_implants()
 	if(!valid_objects.len)
 		if(self)
 			to_chat(src, "You have nothing stuck in your body that is large enough to remove.")
@@ -951,7 +954,7 @@ mob/proc/yank_out_object()
 		visible_message("<span class='warning'><b>[src] rips [selection] out of their body.</b></span>","<span class='warning'><b>You rip [selection] out of your body.</b></span>")
 	else
 		visible_message("<span class='warning'><b>[usr] rips [selection] out of [src]'s body.</b></span>","<span class='warning'><b>[usr] rips [selection] out of your body.</b></span>")
-	valid_objects = get_visible_implants(0)
+	valid_objects = get_visible_implants()
 	if(valid_objects.len == 1) //Yanking out last object - removing verb.
 		src.verbs -= /mob/proc/yank_out_object
 
@@ -965,25 +968,25 @@ mob/proc/yank_out_object()
 					affected = organ
 
 		affected.implants -= selection
+		affected.embedded -= selection
+		selection.on_embed_removal(src)
 		H.shock_stage+=20
 		affected.take_damage((selection.w_class * 3), 0, 0, 1, "Embedded object extraction")
-
-		if(prob(selection.w_class * 5)) //I'M SO ANEMIC I COULD JUST -DIE-.
-			var/datum/wound/internal_bleeding/I = new (min(selection.w_class * 5, 15))
-			affected.wounds += I
-			H.custom_pain("Something tears wetly in your [affected] as [selection] is pulled free!", 1)
 
 		if (ishuman(U))
 			var/mob/living/carbon/human/human_user = U
 			human_user.bloody_hands(H)
 
-	else if(issilicon(src))
-		var/mob/living/silicon/robot/R = src
-		R.embedded -= selection
-		R.adjustBruteLoss(5)
-		R.adjustFireLoss(10)
+	else
+		embedded -= selection
+		selection.on_embed_removal(src)
+		if(issilicon(src))
+			var/mob/living/silicon/robot/R = src
+			R.adjustBruteLoss(5)
+			R.adjustFireLoss(10)
 
 	selection.forceMove(get_turf(src))
+
 	if(!(U.l_hand && U.r_hand))
 		U.put_in_hands(selection)
 
@@ -1061,6 +1064,52 @@ mob/proc/yank_out_object()
 		to_chat(usr, "You are now not facing anything.")
 	else
 		to_chat(usr, "You are now facing [dir2text(facing_dir)].")
+
+/mob/verb/browse_mine_stats()
+	set name		= "Show Stats Values"
+	set desc		= "Browse your character stats."
+	set category	= "IC"
+	set src			= usr
+
+	browse_src_stats(src)
+
+/mob/proc/browse_src_stats(mob/user)
+	var/aditonalcss = {"
+		<style>
+			table, th, td {
+				border: #3333aa solid 1px;
+				border-radius: 5px;
+				padding: 5px;
+				text-align: center;
+			}
+			th{
+				background:#633;
+			}
+		</style>
+	"}
+	var/table_header = "<th>Stat's Name<th>Stat's Value"
+	var/list/S = list()
+	for(var/TS in ALL_STATS)
+		S += "<td>[TS]<td>[getStatStats(TS)]"
+	var/data = {"
+		[aditonalcss]
+		[user == src ? "Your stats:" : "[name]'s stats"]
+		<table>
+			<tr>[table_header]
+			<tr>[S.Join("<tr>")]
+		</table>
+	"}
+
+	var/datum/browser/B = new(src, "StatsBrowser","[user == src ? "Your stats:" : "[name]'s stats"]", 220, 345)
+	B.set_content(data)
+	B.set_window_options("can_resize=0;can_minimize=0")
+	B.open()
+
+/mob/proc/getStatStats(typeOfStat)
+	if (SSticker.current_state != GAME_STATE_PREGAME)
+		if(stats)
+			return stats.getStat(typeOfStat)
+		return 0
 
 /mob/proc/set_face_dir(var/newdir)
 	if(!isnull(facing_dir) && newdir == facing_dir)

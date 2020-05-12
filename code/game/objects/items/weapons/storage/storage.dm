@@ -7,6 +7,7 @@
 	w_class = ITEM_SIZE_NORMAL
 	item_flags = DRAG_AND_DROP_UNEQUIP|EQUIP_SOUNDS
 	var/list/can_hold = new/list() //List of objects which this item can store (if set, it can't store anything else)
+	var/list/can_hold_extra = list() //List of objects which this item can additionally store not defined by the parent.
 	var/list/cant_hold = new/list() //List of objects which this item can't store (in effect only if can_hold isn't set)
 	var/list/is_seeing = new/list() //List of mobs which are currently seeing the contents of this item's storage
 	var/max_w_class = ITEM_SIZE_NORMAL //Max size of objects that this object can store (in effect only if can_hold isn't set)
@@ -18,6 +19,10 @@
 	var/allow_quick_gather = null //Set this variable to allow the object to have the 'toggle mode' verb, which quickly collects all items from a tile.
 	var/collection_mode = TRUE //0 = pick one at a time, 1 = pick all on tile
 	var/use_sound = "rustle" //sound played when used. null for no sound.
+
+/obj/item/weapon/storage/New()
+	can_hold |= can_hold_extra
+	. = ..()
 
 /HUD_element/threePartBox/storageBackground
 	start_icon = icon("icons/HUD/storage_start.png")
@@ -50,7 +55,7 @@
 		S.close(clientMob)
 
 /obj/item/weapon/storage/proc/setupItemBackground(var/HUD_element/itemBackground, var/atom/item, var/itemCount)
-	itemBackground.setClickProc(.itemBackgroundClick)
+	itemBackground.setClickProc(.proc/itemBackgroundClick)
 	itemBackground.setData("item", item)
 
 	var/HUD_element/itemIcon = itemBackground.add(new/HUD_element())
@@ -72,6 +77,7 @@
 		item.maptext = "<font color='white'>[itemCount]</font>"
 
 /obj/item/weapon/storage/proc/generateHUD(var/datum/hud/data)
+	RETURN_TYPE(/HUD_element)
 	var/HUD_element/main = new("storage")
 	main.setDeleteOnHide(TRUE)
 
@@ -79,7 +85,7 @@
 	closeButton.setName("HUD Storage Close Button")
 	closeButton.setIcon(icon("icons/mob/screen1.dmi","x"))
 	closeButton.setHideParentOnClick(TRUE)
-	closeButton.setClickProc(.closeButtonClick)
+	closeButton.setClickProc(.proc/closeButtonClick)
 	closeButton.setData("item", src)
 
 	//storage space based items
@@ -93,7 +99,7 @@
 		storageBackground.setName("HUD Storage Background")
 		storageBackground.setHideParentOnHide(TRUE)
 
-		storageBackground.setClickProc(.storageBackgroundClick)
+		storageBackground.setClickProc(.proc/storageBackgroundClick)
 		storageBackground.setData("item", src)
 
 		var/paddingSides = 2 //in pixels
@@ -177,7 +183,7 @@
 
 				currentItemNumber++
 			else //empty slots
-				itemBackground.setClickProc(.storageBackgroundClick)
+				itemBackground.setClickProc(.proc/storageBackgroundClick)
 				itemBackground.setData("item", src)
 
 			totalWidth += itemBackground.getWidth() + spacingBetweenSlots
@@ -505,8 +511,8 @@
 	for(var/obj/item/I in contents)
 		remove_from_storage(I, target)
 
-/obj/item/weapon/storage/New()
-	..()
+/obj/item/weapon/storage/Initialize(mapload, ...)
+	. = ..()
 	if(allow_quick_empty)
 		verbs += /obj/item/weapon/storage/verb/quick_empty
 	else
@@ -519,12 +525,19 @@
 
 	if(isnull(max_storage_space) && !isnull(storage_slots))
 		max_storage_space = storage_slots*BASE_STORAGE_COST(max_w_class)
-	
-	spawn(5)
-		var/total_storage_space = 0
-		for(var/obj/item/I in contents)
-			total_storage_space += I.get_storage_cost()
-		max_storage_space = max(total_storage_space,max_storage_space) //prevents spawned containers from being too small for their contents
+
+	// Deferred storage doesn't populate_contents() from Initialize, it does so when accessed by player
+	if(!istype(src, /obj/item/weapon/storage/deferred))
+		populate_contents()
+
+	var/total_storage_space = 0
+	for(var/obj/item/I in contents)
+		total_storage_space += I.get_storage_cost()
+	max_storage_space = max(total_storage_space, max_storage_space) //prevents spawned containers from being too small for their contents
+
+// Override in subtypes
+/obj/item/weapon/storage/proc/populate_contents()
+	return
 
 /obj/item/weapon/storage/emp_act(severity)
 	if(!isliving(loc))

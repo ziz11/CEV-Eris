@@ -209,7 +209,7 @@ This saves us from having to call add_fingerprint() any time something is put in
 			if(W.action_button_name)
 				update_action_buttons()
 
-			if(get_active_hand() == W)
+			if(get_holding_hand(W))
 				W.add_hud_actions(src)
 
 //This is an UNSAFE proc. Use mob_can_equip() before calling this one! Or rather use equip_to_slot_if_possible()
@@ -351,12 +351,12 @@ This saves us from having to call add_fingerprint() any time something is put in
 	if(w_uniform)	items += w_uniform
 
 	if(include_carried)
-		if(slot_l_hand)     items += l_hand
-		if(slot_r_hand)     items += r_hand
-		if(slot_l_store)    items += l_store
-		if(slot_r_store)    items += r_store
-		if(slot_legcuffed)  items += legcuffed
-		if(slot_handcuffed) items += handcuffed
-		if(slot_s_store)    items += s_store
+		if(l_hand)     items += l_hand
+		if(r_hand)     items += r_hand
+		if(l_store)    items += l_store
+		if(r_store)    items += r_store
+		if(legcuffed)  items += legcuffed
+		if(handcuffed) items += handcuffed
+		if(s_store)    items += s_store
 
 	return items

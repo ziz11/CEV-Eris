@@ -46,15 +46,16 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 	data["trace_chem"] = temp_chem
 	data["blood_colour"] = species.blood_color
 	data["resistances"] = null
+	data["ling"] = check_special_role(ROLE_CHANGELING)
 	return data
 
 //Resets blood data
 /mob/living/carbon/human/proc/fixblood()
 	for(var/datum/reagent/organic/blood/B in vessel.reagent_list)
 		if(B.id == "blood")
-			B.data = list(	"donor"=src,"viruses"=null,"species"=species.name,"blood_DNA"=dna.unique_enzymes,"blood_colour"= species.blood_color,"blood_type"=dna.b_type,	\
+			var/data = list("donor"=src,"viruses"=null,"species"=species.name,"blood_DNA"=dna.unique_enzymes,"blood_colour"= species.blood_color,"blood_type"=dna.b_type,	\
 							"resistances"=null,"trace_chem"=null, "virus2" = null, "antibodies" = list())
-			B.color = B.data["blood_colour"]
+			B.initialize_data(data)
 
 // Takes care blood loss and regeneration
 /mob/living/carbon/human/handle_blood()
@@ -74,7 +75,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 	for(var/obj/item/organ/external/temp in organs)
 		if(!(temp.status & ORGAN_BLEEDING) || BP_IS_ROBOTIC(temp))
 			continue
-		for(var/datum/wound/W in temp.wounds) 
+		for(var/datum/wound/W in temp.wounds)
 			if(W.bleeding())
 				if(W.internal)
 					var/removed = W.damage/75
@@ -87,7 +88,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 					blood_max += W.damage * WOUND_BLEED_MULTIPLIER
 		if (temp.open)
 			blood_max += OPEN_ORGAN_BLEED_AMOUNT  //Yer stomach is cut open
-	
+
 	// bloodclotting slows bleeding
 	if(chem_effects[CE_BLOODCLOT])
 		blood_max *=  1 - chem_effects[CE_BLOODCLOT]
@@ -116,25 +117,8 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 	B.volume = amount
 
 	//set reagent data
-	B.data["donor"] = src
-	if (!B.data["virus2"])
-		B.data["virus2"] = list()
-	B.data["virus2"] |= virus_copylist(src.virus2)
-	B.data["antibodies"] = src.antibodies
-	B.data["blood_DNA"] = copytext(src.dna.unique_enzymes,1,0)
-	B.data["blood_type"] = copytext(src.dna.b_type,1,0)
+	B.initialize_data(get_blood_data())
 
-	// Putting this here due to return shenanigans.
-	if(ishuman(src))
-		var/mob/living/carbon/human/H = src
-		B.data["blood_colour"] = H.species.blood_color
-		B.color = B.data["blood_colour"]
-
-	var/list/temp_chem = list()
-	for(var/datum/reagent/R in src.reagents.reagent_list)
-		temp_chem += R.id
-		temp_chem[R.id] = R.volume
-	B.data["trace_chem"] = list2params(temp_chem)
 	return B
 
 //For humans, blood does not appear from blue, it comes from vessels.
@@ -202,8 +186,8 @@ proc/blood_incompatible(donor,receiver,donor_species,receiver_species)
 		if(donor_species != receiver_species)
 			return 1
 
-	var/donor_antigen = copytext(donor,1,lentext(donor))
-	var/receiver_antigen = copytext(receiver,1,lentext(receiver))
+	var/donor_antigen = copytext(donor,1,length(donor))
+	var/receiver_antigen = copytext(receiver,1,length(receiver))
 	var/donor_rh = (findtext(donor,"+")>0)
 	var/receiver_rh = (findtext(receiver,"+")>0)
 
@@ -329,10 +313,10 @@ proc/blood_splatter(var/target,var/datum/reagent/organic/blood/source,var/large)
 			if(PULSE_2FAST, PULSE_THREADY)
 				pulse_mod *= 1.25
 		blood_volume *= max(0.3, (1-(heart.damage / heart.max_damage))) * pulse_mod
-	
-	if(!heart.open && chem_effects[CE_BLOODCLOT])
+
+	if(heart && !heart.open && chem_effects[CE_BLOODCLOT])
 		blood_volume *= max(0, 1-chem_effects[CE_BLOODCLOT])
-	
+
 	return min(blood_volume, 100)
 
 /mob/living/carbon/human/proc/regenerate_blood(var/amount)

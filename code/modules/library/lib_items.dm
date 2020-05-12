@@ -15,9 +15,10 @@
 	name = "bookcase"
 	icon = 'icons/obj/library.dmi'
 	icon_state = "book-0"
-	anchored = 1
-	density = 1
-	opacity = 1
+	matter = list(MATERIAL_WOOD = 10)
+	anchored = TRUE
+	density = TRUE
+	opacity = TRUE
 
 /obj/structure/bookcase/Initialize()
 	. = ..()
@@ -46,7 +47,7 @@
 		to_chat(user, SPAN_NOTICE("You begin dismantling \the [src]."))
 		if(do_after(user,25,src))
 			to_chat(user, SPAN_NOTICE("You dismantle \the [src]."))
-			new /obj/item/stack/material/wood(get_turf(src), 10)
+			drop_materials(drop_location())
 			for(var/obj/item/weapon/book/b in contents)
 				b.loc = (get_turf(src))
 			qdel(src)
@@ -100,35 +101,35 @@
 /obj/structure/bookcase/manuals/medical
 	name = "Medical Manuals bookcase"
 
-	New()
-		..()
-		new /obj/item/weapon/book/manual/medical_cloning(src)
-		new /obj/item/weapon/book/manual/wiki/medical_guide(src)
-		new /obj/item/weapon/book/manual/wiki/medical_guide(src)
-		new /obj/item/weapon/book/manual/wiki/medical_guide(src)
-		update_icon()
+/obj/structure/bookcase/manuals/medical/New()
+	..()
+	new /obj/item/weapon/book/manual/wiki/medical_guide(src)
+	new /obj/item/weapon/book/manual/wiki/medical_guide(src)
+	new /obj/item/weapon/book/manual/wiki/medical_guide(src)
+	update_icon()
 
 
 /obj/structure/bookcase/manuals/engineering
 	name = "Engineering Manuals bookcase"
 
-	New()
-		..()
-		new /obj/item/weapon/book/manual/wiki/engineering_construction(src)
-		new /obj/item/weapon/book/manual/wiki/engineering_hacking(src)
-		new /obj/item/weapon/book/manual/wiki/engineering_guide(src)
-		new /obj/item/weapon/book/manual/wiki/engineering_atmos(src)
-		new /obj/item/weapon/book/manual/wiki/engineering_singularity(src)
-		new /obj/item/weapon/book/manual/evaguide(src)
-		update_icon()
+/obj/structure/bookcase/manuals/engineering/New()
+	..()
+	new /obj/item/weapon/book/manual/wiki/engineering_construction(src)
+	new /obj/item/weapon/book/manual/wiki/engineering_hacking(src)
+	new /obj/item/weapon/book/manual/wiki/engineering_guide(src)
+	new /obj/item/weapon/book/manual/wiki/engineering_atmos(src)
+	new /obj/item/weapon/book/manual/wiki/engineering_singularity(src)
+	update_icon()
 
 /obj/structure/bookcase/manuals/research_and_development
 	name = "R&D Manuals bookcase"
 
-	New()
-		..()
-		new /obj/item/weapon/book/manual/research_and_development(src)
-		update_icon()
+/obj/structure/bookcase/manuals/research_and_development/New()
+	..()
+	new /obj/item/weapon/book/manual/wiki/science_research(src)
+	new /obj/item/weapon/book/manual/wiki/science_research(src)
+	new /obj/item/weapon/book/manual/wiki/science_robotics(src)
+	update_icon()
 
 
 /*

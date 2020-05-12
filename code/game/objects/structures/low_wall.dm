@@ -157,7 +157,7 @@
 			if (M.lying)
 				chance += 20				//Lying down lets you catch less bullets
 		if(prob(chance))
-			health -= P.damage/2
+			health -= P.get_structure_damage()/2
 			if (health > 0)
 				visible_message(SPAN_WARNING("[P] hits \the [src]!"))
 				return 0
@@ -345,7 +345,7 @@
 		//Then we will upgrade the high wall connections to a cross too. this prevents some bugginess
 		if ((((i in list(CORNER_NORTHWEST, CORNER_SOUTHEAST)) && a == CORNER_CLOCKWISE) \
 		|| ((i in list(CORNER_NORTHEAST, CORNER_SOUTHWEST)) && a == CORNER_COUNTERCLOCKWISE)) \
-		&& b in list(5,7))
+		&& (b in list(5,7)))
 			//What a mess, all that determines whether a corner connects to only vertical.
 			//If its in the northwest or southeast corner, and its only connection is clockwise, then that connection is either up or down
 			//Ditto with the other check
@@ -383,17 +383,10 @@
 	//If the user isn't in harm intent and there's no window ontop of this wall, it is treated like a table.
 		//Items used on it will be placed on it like a surface
 
-	//Turn on harm intent to override this behaviour and instead attack/deconstruct the wall
-	if (!(locate(/obj/structure/window) in loc) && user.a_intent != I_HURT)
-		if (user.unEquip(I, src.loc))
-			set_pixel_click_offset(I, params)
-			return
-
 	var/tool_type = I.get_tool_type(user, list(QUALITY_WELDING), src)
 	switch(tool_type)
-
 		if(QUALITY_WELDING)
-			if (locate(/obj/structure/window in loc))
+			if (locate(/obj/structure/window) in loc)
 				to_chat(user, SPAN_NOTICE("You must remove the window mounted on this wall before it can be repaired or deconstructed"))
 				return
 			if(locate(/obj/effect/overlay/wallrot) in src)
@@ -415,6 +408,11 @@
 					user.visible_message(SPAN_WARNING("The wall was torn open by [user]!"))
 					return
 
+	//Turn on harm intent to override this behaviour and instead attack the wall
+	if (!(locate(/obj/structure/window) in loc) && user.a_intent != I_HURT)
+		if (user.unEquip(I, src.loc))
+			set_pixel_click_offset(I, params)
+			return
 
 
 	//Hitting the wall with stuff
@@ -492,6 +490,9 @@
 		target.forceMove(loc)
 		target.Weaken(5)
 		visible_message(SPAN_DANGER("[user] puts [target] on \the [src]."))
+		target.attack_log += "\[[time_stamp()]\] <font color='orange'>Has been put on \the [src] by [user.name] ([user.ckey] )</font>"
+		user.attack_log += "\[[time_stamp()]\] <font color='red'>Puts [target.name] ([target.ckey] on \the [src])</font>"
+		msg_admin_attack("[user] puts a [target] on \the [src].")
 	return TRUE
 
 

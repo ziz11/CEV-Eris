@@ -23,7 +23,7 @@
 #define DROWSY    "drowsy"
 
 #define FIRE_DAMAGE_MODIFIER 0.0215 // Higher values result in more external fire damage to the skin. (default 0.0215)
-#define  AIR_DAMAGE_MODIFIER 2.025  // More means less damage from hot air scalding lungs, less = more damage. (default 2.025)
+#define AIR_DAMAGE_MODIFIER 2.025  // More means less damage from hot air scalding lungs, less = more damage. (default 2.025)
 
 //Armor defines
 
@@ -58,7 +58,6 @@
 #define BP_GBLADDER "gas bladder"
 #define BP_POLYP    "polyp segment"
 #define BP_ANCHOR   "anchoring ligament"
-#define BP_PLASMA   "plasma filter"
 #define BP_ACETONE  "acetone reactor"
 
 // Robo Organs.
@@ -115,6 +114,12 @@
 #define ORGAN_DEAD       (1<<5)
 #define ORGAN_MUTATED    (1<<6)
 
+// Body part functions
+#define BODYPART_GRASP				(1<<0)
+#define BODYPART_STAND				(1<<1)
+#define BODYPART_REAGENT_INTAKE		(1<<2)
+#define BODYPART_GAS_INTAKE			(1<<3)
+
 #define DROPLIMB_EDGE 0
 #define DROPLIMB_BLUNT 1
 #define DROPLIMB_BURN 2
@@ -137,4 +142,3 @@
 #define INFECTION_LEVEL_THREE 1000
 
 #define ORGAN_RECOVERY_THRESHOLD (5 MINUTES)
-

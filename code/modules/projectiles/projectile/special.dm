@@ -1,8 +1,7 @@
 /obj/item/projectile/ion
 	name = "ion bolt"
 	icon_state = "ion"
-	damage = 0
-	damage_type = BURN
+	damage_types = list(BURN = 0)
 	nodamage = TRUE
 	check_armour = ARMOR_ENERGY
 
@@ -13,7 +12,7 @@
 /obj/item/projectile/bullet/gyro
 	name = "explosive bolt"
 	icon_state = "bolter"
-	damage = 50
+	damage_types = list(BRUTE = 50)
 	check_armour = ARMOR_BULLET
 	sharp = TRUE
 	edge = TRUE
@@ -25,7 +24,8 @@
 /obj/item/projectile/bullet/rocket
 	name = "high explosive rocket"
 	icon_state = "rocket"
-	damage = 50
+	damage_types = list(BRUTE = 70)
+	armor_penetration = 100
 	check_armour = ARMOR_BULLET
 
 /obj/item/projectile/bullet/rocket/launch(atom/target, target_zone, x_offset, y_offset, angle_offset)
@@ -40,8 +40,7 @@
 /obj/item/projectile/temp
 	name = "freeze beam"
 	icon_state = "ice_2"
-	damage = 0
-	damage_type = BURN
+	damage_types = list(BURN = 0)
 	nodamage = 1
 	check_armour = ARMOR_ENERGY
 	var/temperature = 300
@@ -57,12 +56,11 @@
 	name = "meteor"
 	icon = 'icons/obj/meteor.dmi'
 	icon_state = "smallf"
-	damage = 0
-	damage_type = BRUTE
+	damage_types = list(BRUTE = 0)
 	nodamage = TRUE
 	check_armour = ARMOR_BULLET
 
-/obj/item/projectile/meteor/Bump(atom/A as mob|obj|turf|area)
+/obj/item/projectile/meteor/Bump(atom/A as mob|obj|turf|area, forced)
 	if(A == firer)
 		loc = A.loc
 		return
@@ -86,8 +84,7 @@
 /obj/item/projectile/energy/floramut
 	name = "alpha somatoray"
 	icon_state = "energy"
-	damage = 0
-	damage_type = TOX
+	damage_types = list(TOX = 0)
 	nodamage = TRUE
 	check_armour = ARMOR_ENERGY
 
@@ -119,8 +116,7 @@
 /obj/item/projectile/energy/florayield
 	name = "beta somatoray"
 	icon_state = "energy2"
-	damage = 0
-	damage_type = TOX
+	damage_types = list(TOX = 0)
 	nodamage = TRUE
 	check_armour = ARMOR_ENERGY
 
@@ -147,8 +143,30 @@
 /obj/item/projectile/chameleon
 	name = "bullet"
 	icon_state = "bullet"
-	damage = 1 // stop trying to murderbone with a fake gun dumbass!!!
+	damage_types = list(HALLOSS = 1)
 	embed = 0 // nope
 	nodamage = TRUE
-	damage_type = HALLOSS
 	muzzle_type = /obj/effect/projectile/bullet/muzzle
+
+
+/obj/item/projectile/flamer_lob
+	name = "blob of fuel"
+	icon_state = "fireball"
+	damage_types = list(BURN = 20)
+	check_armour = ARMOR_MELEE
+	var/life = 3
+
+
+/obj/item/projectile/flamer_lob/New()
+	.=..()
+
+/obj/item/projectile/flamer_lob/Move(var/atom/A)
+	.=..()
+	life--
+	var/turf/T = get_turf(src)
+	new/obj/effect/decal/cleanable/liquid_fuel(T, 1 , 1)
+	T.hotspot_expose((T20C*2) + 380,500)
+	if(!life)
+		qdel(src)
+
+

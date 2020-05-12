@@ -44,6 +44,8 @@ GLOBAL_LIST_EMPTY(wedge_icon_cache)
 	var/datum/wifi/receiver/button/door/wifi_receiver
 	var/obj/item/wedged_item
 
+	damage_smoke = TRUE
+
 /obj/machinery/door/airlock/attack_generic(var/mob/user, var/damage)
 	if(stat & (BROKEN|NOPOWER))
 		if(damage >= 10)
@@ -587,38 +589,36 @@ There are 9 wires.
 	verbs -= /obj/machinery/door/airlock/proc/try_wedge_item
 	verbs += /obj/machinery/door/airlock/proc/take_out_wedged_item
 
-/obj/machinery/door/airlock/proc/try_wedge_item(mob/living/user)
+/obj/machinery/door/airlock/proc/try_wedge_item()
 	set name = "Wedge item"
 	set category = "Object"
 	set src in view(1)
 
-	if(!user)
-		user = usr
-
-	var/obj/item/weapon/tool/T = user.get_active_hand()
+	if(!isliving(usr))
+		to_chat(usr, SPAN_WARNING("You can't do this."))
+		return
+	var/obj/item/weapon/tool/T = usr.get_active_hand()
 	if(istype(T) && T.w_class >= ITEM_SIZE_NORMAL) // We do the checks before proc call, because see "proc overhead".
 		if(!density)
-			user.drop_item()
+			usr.drop_item()
 			force_wedge_item(T)
-			to_chat(user, SPAN_NOTICE("You wedge [T] into [src]."))
+			to_chat(usr, SPAN_NOTICE("You wedge [T] into [src]."))
 		else
-			to_chat(user, SPAN_NOTICE("[T] can't be wedged into [src], while [src] is open."))
+			to_chat(usr, SPAN_NOTICE("[T] can't be wedged into [src], while [src] is open."))
 
-/obj/machinery/door/airlock/proc/take_out_wedged_item(mob/living/user)
+/obj/machinery/door/airlock/proc/take_out_wedged_item()
 	set name = "Remove Blockage"
 	set category = "Object"
 	set src in view(1)
 
-	if(!user)
-		user = usr
+	if(!isliving(usr) || !CanUseTopic(usr))
+		return
 
 	if(wedged_item)
-		if(user && !wedged_item.use_tool(user, src, WORKTIME_NEAR_INSTANT, QUALITY_PRYING, FAILCHANCE_ZERO, list(STAT_MEC, STAT_ROB)))
-			return
-		wedged_item.forceMove(loc)
-		if(user)
-			user.put_in_hands(wedged_item)
-			to_chat(user, SPAN_NOTICE("You took [wedged_item] out of [src]."))
+		wedged_item.forceMove(drop_location())
+		if(usr)
+			usr.put_in_hands(wedged_item)
+			to_chat(usr, SPAN_NOTICE("You took [wedged_item] out of [src]."))
 		wedged_item = null
 		verbs -= /obj/machinery/door/airlock/proc/take_out_wedged_item
 		verbs += /obj/machinery/door/airlock/proc/try_wedge_item
@@ -626,7 +626,7 @@ There are 9 wires.
 
 /obj/machinery/door/airlock/AltClick(mob/user)
 	if(Adjacent(user))
-		try_wedge_item(user)
+		wedged_item ? take_out_wedged_item() : try_wedge_item()
 
 /obj/machinery/door/airlock/MouseDrop(obj/over_object)
 	if(ishuman(usr) && usr == over_object && !usr.incapacitated() && Adjacent(usr))
@@ -862,7 +862,7 @@ There are 9 wires.
 		var/mob/living/carbon/human/H = user
 		if(H.getBrainLoss() >= 60)
 			playsound(src.loc, 'sound/effects/bang.ogg', 25, 1)
-			if(!istype(H.head, /obj/item/clothing/head/helmet))
+			if(!istype(H.head, /obj/item/clothing/head/armor/helmet))
 				visible_message(SPAN_WARNING("[user] headbutts the airlock."))
 				var/obj/item/organ/external/affecting = H.get_organ(BP_HEAD)
 				H.Stun(8)
@@ -1387,7 +1387,7 @@ There are 9 wires.
 	user.do_attack_animation(src)
 	if(calc_damage <= 0)
 		user.visible_message(SPAN_DANGER("\The [user] hits \the [src] with \the [W] with no visible effect."))
-		quiet ? () : playsound(src.loc, hitsound, 20, 1)
+		quiet ? null : playsound(src.loc, hitsound, 20, 1)
 	else
 		user.visible_message(SPAN_DANGER("\The [user] forcefully strikes \the [src] with \the [W]!"))
 		playsound(src.loc, hitsound, quiet? 3: calc_damage*2.0, 1, 3,quiet?-5 :2)

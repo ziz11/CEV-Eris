@@ -75,7 +75,7 @@
 /mob/living/simple_animal/hostile/syndicate/melee/bullet_act(var/obj/item/projectile/Proj)
 	if(!Proj)	return
 	if(prob(65))
-		src.health -= Proj.damage
+		..()
 	else
 		visible_message("\red <B>[src] blocks [Proj] with its shield!</B>")
 	return 0
@@ -103,9 +103,9 @@
 	ranged = 1
 	rapid = 1
 	icon_state = "syndicateranged"
-	casingtype = /obj/item/ammo_casing/a10mm
+	casingtype = /obj/item/ammo_casing/pistol
 	projectilesound = 'sound/weapons/Gunshot_light.ogg'
-	projectiletype = /obj/item/projectile/bullet/a10mm
+	projectiletype = /obj/item/projectile/bullet/pistol
 
 	weapon1 = /obj/item/weapon/gun/projectile/automatic/c20r
 

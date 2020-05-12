@@ -383,7 +383,12 @@
 	desc = "Medical Specialist"
 	region = ACCESS_REGION_SECURITY
 
-// /var/const/free_access_id = 68
+/var/const/access_paramedic = 68 // Paramedic's closet
+/datum/access/paramedic
+	id = access_paramedic
+	desc = "Paramedic's Office"
+	region = ACCESS_REGION_MEDBAY
+
 // /var/const/free_access_id = 69
 
 /**************
@@ -486,7 +491,7 @@
 /datum/access/research_equipment
 	id = access_research_equipment
 	desc = "Research Console"
-	access_type = ACCESS_REGION_RESEARCH 
+	region = ACCESS_REGION_RESEARCH
 /***************
 * Antag access *
 ***************/

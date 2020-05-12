@@ -18,9 +18,19 @@
 
 /obj/item/clothing/Initialize(mapload, ...)
 	. = ..()
-	if(!matter)
+
+	var/obj/screen/item_action/action = new /obj/screen/item_action/top_bar/clothing_info
+	action.owner = src
+	if(!islist(hud_actions)) hud_actions = list()
+	hud_actions += action
+
+	if(matter)
+		return
+
+	else if(!matter)
 		matter = list()
-	matter.Add(list(MATERIAL_BIOMATTER = 5 * w_class))	// based of item size
+
+	matter.Add(list(MATERIAL_BIOMATTER = 5 * w_class))    // based of item size
 
 /obj/item/clothing/Destroy()
 	for(var/obj/item/clothing/accessory/A in accessories)
@@ -61,6 +71,85 @@
 		return ..()
 	if(!pre_equip(usr, over_object))
 		..()
+
+/proc/body_part_coverage_to_string(var/body_parts)
+	var/list/body_partsL = list()
+	if(body_parts & HEAD)
+		body_partsL.Add("head")
+	if(body_parts & FACE)
+		body_partsL.Add("face")
+	if(body_parts & EYES)
+		body_partsL.Add("eyes")
+	if(body_parts & EARS)
+		body_partsL.Add("ears")
+	if(body_parts & UPPER_TORSO)
+		body_partsL.Add("upper torso")
+	if(body_parts & LOWER_TORSO)
+		body_partsL.Add("lower torso")
+	if(body_parts & LEGS)
+		body_partsL.Add("legs")
+	else
+		if(body_parts & LEG_LEFT)
+			body_partsL.Add("left leg")
+		if(body_parts & LEG_RIGHT)
+			body_partsL.Add("right leg")
+	if(body_parts & ARMS)
+		body_partsL.Add("arms")
+	else
+		if(body_parts & ARM_LEFT)
+			body_partsL.Add("left arm")
+		if(body_parts & ARM_RIGHT)
+			body_partsL.Add("right arm")
+
+	return english_list(body_partsL)
+
+/obj/item/clothing/ui_data()
+	var/list/data = list()
+	if(armor.len)
+		var/list/armor_vals = list()
+		for(var/i in armor)
+			if(armor[i])
+				armor_vals += list(list(
+					"name" = i,
+					"value" = armor[i]
+					))
+		data["armor_info"] = armor_vals
+	if(body_parts_covered)
+		var/body_part_string = body_part_coverage_to_string(body_parts_covered)
+		data["body_coverage"] = body_part_string
+	data["slowdown"] = slowdown
+	if(heat_protection)
+		data["heat_protection"] = body_part_coverage_to_string(heat_protection)
+		data["heat_protection_temperature"] = max_heat_protection_temperature
+	if(cold_protection)
+		data["cold_protection"] = body_part_coverage_to_string(cold_protection)
+		data["cold_protection_temperature"] = min_cold_protection_temperature
+	data["equip_delay"] = equip_delay
+	return data
+
+/obj/item/clothing/ui_interact(mob/user, ui_key = "main", datum/nanoui/ui = null, force_open = 1, state = GLOB.default_state)
+	var/list/data = ui_data(user)
+
+	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
+	if(!ui)
+		ui = new(user, src, ui_key, "clothing_stats.tmpl", name, 650, 550, state = state)
+		ui.auto_update_layout = 1
+		ui.set_initial_data(data)
+		ui.open()
+
+/obj/item/clothing/ui_action_click(mob/living/user, action_name)
+	if(action_name == "Clothing information")
+		ui_interact(user)
+		return TRUE
+	return ..()
+
+/obj/screen/item_action/top_bar/clothing_info
+	icon = 'icons/mob/screen/gun_actions.dmi'
+	screen_loc = "8,1:13"
+	minloc = "7,2:13"
+	name = "Clothing information"
+	icon_state = "info"
+
 
 ///////////////////////////////////////////////////////////////////////
 // Ears: headsets, earmuffs and tiny objects
@@ -155,6 +244,8 @@ BLIND     // can't see anything
 	var/vision_flags = 0
 	var/darkness_view = 0//Base human is 2
 	var/see_invisible = -1
+	var/have_lenses = 0
+	var/protection = 0
 
 ///////////////////////////////////////////////////////////////////////
 //Gloves
@@ -307,12 +398,12 @@ BLIND     // can't see anything
 
 	var/can_hold_knife
 	var/obj/item/holding
-
+	var/noslip = 0
+	var/module_inside = 0
 
 	permeability_coefficient = 0.50
 	slowdown = SHOES_SLOWDOWN
 	force = 2
-	var/overshoes = 0
 
 /obj/item/clothing/shoes/proc/draw_knife()
 	set name = "Draw Boot Knife"
@@ -356,13 +447,24 @@ BLIND     // can't see anything
 
 /obj/item/clothing/shoes/attackby(var/obj/item/I, var/mob/user)
 	var/global/knifes
+	if(istype(I,/obj/item/noslipmodule))
+		if (item_flags != 0)
+			noslip = item_flags
+		module_inside = 1
+		to_chat(user, "You attached no slip sole")
+		permeability_coefficient = 0.05
+		item_flags = NOSLIP | SILENT
+		origin_tech = list(TECH_ILLEGAL = 3)
+		siemens_coefficient = 0 // DAMN BOI
+		qdel(I)
+
 	if(!knifes)
 		knifes = list(
-			/obj/item/weapon/material/knife,
+			/obj/item/weapon/tool/knife,
 			/obj/item/weapon/material/shard,
-			/obj/item/weapon/material/butterfly,
+			/obj/item/weapon/tool/knife/butterfly,
 			/obj/item/weapon/material/kitchen/utensil,
-			/obj/item/weapon/material/hatchet/tacknife,
+			/obj/item/weapon/tool/knife/tacknife,
 		)
 	if(can_hold_knife && is_type_in_list(I, knifes))
 		if(holding)
@@ -376,6 +478,22 @@ BLIND     // can't see anything
 	else
 		return ..()
 
+/obj/item/clothing/shoes/verb/detach_noslipmodule()
+	set name = "Detach acccessory"
+	set category = "Object"
+	set src in view(1)
+
+	if (module_inside == 1 )
+		if (noslip != 0)
+			item_flags = noslip
+		var/obj/item/noslipmodule/NSM = new()
+		usr.put_in_hands(NSM)
+	else to_chat(usr, "You haven't got any accessories in your shoes")
+
+
+
+
+
 /obj/item/clothing/shoes/update_icon()
 	overlays.Cut()
 	if(holding)
@@ -385,6 +503,7 @@ BLIND     // can't see anything
 /obj/item/clothing/shoes/proc/handle_movement(var/turf/walking, var/running)
 	return
 
+
 ///////////////////////////////////////////////////////////////////////
 //Suit
 /obj/item/clothing/suit
@@ -393,6 +512,7 @@ BLIND     // can't see anything
 	var/fire_resist = T0C+100
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS|LEGS
 	allowed = list(
+		/obj/item/weapon/clipboard,
 		/obj/item/weapon/storage/pouch/,
 		/obj/item/weapon/gun,
 		/obj/item/weapon/melee,
@@ -410,13 +530,12 @@ BLIND     // can't see anything
 		/obj/item/weapon/reagent_containers/spray,
 		/obj/item/device/radio,
 		/obj/item/clothing/mask)
-	armor = list(melee = 0, bullet = 0,energy = 0, bomb = 0, bio = 0, rad = 0)
 	slot_flags = SLOT_OCLOTHING
 	var/blood_overlay_type = "suit"
 	siemens_coefficient = 0.9
 	w_class = ITEM_SIZE_NORMAL
 	var/list/extra_allowed = list()
-	equip_delay = 2 SECONDS
+	equip_delay = 1 SECONDS
 
 /obj/item/clothing/suit/New()
 	allowed |= extra_allowed
@@ -433,7 +552,6 @@ BLIND     // can't see anything
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
 	permeability_coefficient = 0.90
 	slot_flags = SLOT_ICLOTHING
-	armor = list(melee = 0, bullet = 0,energy = 0, bomb = 0, bio = 0, rad = 0)
 	w_class = ITEM_SIZE_NORMAL
 	var/has_sensor = 1 //For the crew computer 2 = unable to change mode
 	var/sensor_mode = 0

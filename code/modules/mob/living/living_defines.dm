@@ -8,6 +8,11 @@
 
 	var/hud_updateflag = 0
 
+	var/life_cycles_before_sleep = 120
+	var/life_cycles_before_scan = 100
+
+	var/stasis = FALSE
+	var/AI_inactive = FALSE
 
 	var/inventory_shown = 1
 
@@ -61,3 +66,8 @@
 	mob_classification = CLASSIFICATION_ORGANIC
 
 	var/list/chem_effects = list()
+
+	//Used in living/recoil.dm
+	var/recoil = 0 //What our current recoil level is
+	var/last_recoil_update = 0 //When our last recoil update was
+	var/recoil_timer //Holds the timer ID

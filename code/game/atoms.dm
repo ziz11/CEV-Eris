@@ -32,6 +32,11 @@
 
 	var/list/preloaded_reagents = null
 
+	var/sanity_damage = 0
+
+/atom/proc/update_icon()
+	return
+
 /atom/New(loc, ...)
 	init_plane()
 	update_plane()
@@ -304,6 +309,7 @@ its easier to just keep the beam vertical.
 				to_chat(user, "<span class='notice'>It has [reagents.total_volume] unit\s left.</span>")
 			else
 				to_chat(user, "<span class='danger'>It's empty.</span>")
+	SEND_SIGNAL(src, COMSIG_EXAMINE, user, distance)
 
 	return distance == -1 || (get_dist(src, user) <= distance) || isobserver(user)
 
@@ -677,7 +683,7 @@ its easier to just keep the beam vertical.
 	BM.pixel_x--
 	BM.pixel_y--
 
-	if(Proj.damage >= WEAPON_FORCE_DANGEROUS)//If it does a lot of damage it makes a nice big black hole.
+	if(Proj.get_structure_damage() >= WEAPON_FORCE_DANGEROUS)//If it does a lot of damage it makes a nice big black hole.
 		BM.icon_state = "scorch"
 		BM.set_dir(pick(NORTH,SOUTH,EAST,WEST)) // random scorch design
 	else //Otherwise it's a light dent.

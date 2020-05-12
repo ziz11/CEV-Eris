@@ -97,9 +97,11 @@
 	name = T_BOARD("prisoner management console")
 	build_path = /obj/machinery/computer/prisoner
 
+/*
 /obj/item/weapon/circuitboard/mecha_control
 	name = T_BOARD("exosuit control console")
 	build_path = /obj/machinery/computer/mecha
+*/
 
 /obj/item/weapon/circuitboard/rdservercontrol
 	name = T_BOARD("R&D server control console")
@@ -136,7 +138,7 @@
 
 /obj/item/weapon/circuitboard/ordercomp
 	name = T_BOARD("supply ordering console")
-	build_path = /obj/machinery/computer/ordercomp
+	build_path = /obj/machinery/computer/supplycomp/order
 	origin_tech = list(TECH_DATA = 2)
 
 /obj/item/weapon/circuitboard/mining_shuttle

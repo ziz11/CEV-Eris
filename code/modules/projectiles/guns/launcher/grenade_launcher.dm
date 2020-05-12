@@ -1,6 +1,7 @@
 /obj/item/weapon/gun/launcher/grenade
 	name = "NT GL \"Protector\""
 	desc = "A bulky pump-action grenade launcher. Holds up to 6 grenades in a revolving magazine."
+	icon = 'icons/obj/guns/launcher/riotgun.dmi'
 	icon_state = "riotgun"
 	item_state = "riotgun"
 	w_class = ITEM_SIZE_BULKY
@@ -9,7 +10,7 @@
 
 	fire_sound = 'sound/weapons/empty.ogg'
 	fire_sound_text = "a metallic thunk"
-	recoil = 0
+	recoil_buildup = 0
 	throw_distance = 7
 	release_force = 5
 
@@ -17,6 +18,7 @@
 	var/list/grenades = new/list()
 	var/max_grenades = 5 //holds this + one in the chamber
 	zoom_factor = 2.0
+	twohanded = TRUE
 
 //revolves the magazine, allowing players to choose between multiple grenade types
 /obj/item/weapon/gun/launcher/grenade/proc/pump(mob/user as mob)
@@ -90,8 +92,8 @@
 	return chambered
 
 /obj/item/weapon/gun/launcher/grenade/handle_post_fire(mob/user)
-	message_admins("[key_name_admin(user)] fired a grenade ([chambered.name]) from a grenade launcher ([src.name]).")
-	log_game("[key_name_admin(user)] used a grenade ([chambered.name]).")
+	log_and_message_admins("fired a grenade ([chambered.name]) from a grenade launcher ([src.name]).")
+	user.attack_log += "\[[time_stamp()]\] <font color='red'> fired a grenade ([chambered.name]) from a grenade launcher ([src.name])</font>"
 	chambered = null
 	pump(user)
 
@@ -104,7 +106,7 @@
 	force = 5
 	max_grenades = 0
 	safety = FALSE
-
+	twohanded = FALSE
 /obj/item/weapon/gun/launcher/grenade/underslung/attack_self()
 	return
 
@@ -135,9 +137,9 @@
 /obj/item/weapon/gun/launcher/grenade/lenar
 	name = "FS GL \"Lenar\""
 	desc = "A more than bulky pump-action grenade launcher. Holds up to 6 grenades in a revolving magazine."
+	icon = 'icons/obj/guns/launcher/grenadelauncher.dmi'
 	icon_state = "Grenadelauncher_PMC"
 	item_state = "pneumatic"
-	item_state_slots = list(slot_back_str = "pneumatic")
 	w_class = ITEM_SIZE_HUGE
 	slot_flags = SLOT_BACK
 	matter = list(MATERIAL_PLASTEEL = 30, MATERIAL_PLASTIC = 10)

@@ -31,6 +31,8 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	var/big_item_chance = 40
 	var/obj/big_item
 	var/list/ways = list("pokes around in", "searches", "scours", "digs through", "rummages through", "goes through","picks through")
+	var/beacon = FALSE // If this junk pile is getting pulled by the junk beacon or not.
+	sanity_damage = 0.1
 
 /obj/structure/scrap/proc/make_cube()
 	var/obj/container = new /obj/structure/scrap_cube(loc, loot_max)
@@ -91,7 +93,10 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 /obj/structure/scrap/proc/make_big_loot()
 	if(prob(big_item_chance))
 		var/obj/randomcatcher/CATCH = new /obj/randomcatcher(src)
-		big_item = CATCH.get_item(/obj/random/pack/junk_machine)
+		if(beacon)
+			big_item = CATCH.get_item(/obj/random/pack/junk_machine/beacon)
+		else
+			big_item = CATCH.get_item(/obj/random/pack/junk_machine)
 		big_item.forceMove(src)
 		if(prob(66))
 			big_item.make_old()
@@ -169,16 +174,20 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	for(var/A in loot)
 		loot.remove_from_storage(A,src)
 
+	var/total_storage_space = 0
+
 	if(contents.len)
 		contents = shuffle(contents)
-		var/num = rand(2,loot_min)
+		var/num = rand(2, loot_min)
 		for(var/obj/item/O in contents)
 			if(!num)
 				break
 			if(O == loot || O == big_item)
 				continue
+			total_storage_space += O.get_storage_cost()
 			O.forceMove(loot)
 			num--
+	loot.max_storage_space = max(10, total_storage_space)
 	update_icon()
 
 /obj/structure/scrap/proc/randomize_image(image/I)
@@ -379,6 +388,7 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 		/obj/random/pack/tech_loot = 4,
 		/obj/random/powercell,
 		/obj/random/circuitboard,
+		/obj/random/science,
 		/obj/random/material_ore,
 		/obj/random/common_oddities = 0.5,
 		/obj/random/pack/rare,//No weight on this, rare loot is pretty likely to appear in scientific scrap
@@ -418,6 +428,9 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_max = 14
 	big_item_chance = 75
 
+/obj/structure/scrap/poor/large/beacon
+	beacon = TRUE
+
 /obj/structure/scrap/vehicle/large
 	name = "large industrial debris pile"
 	opacity = TRUE
@@ -429,6 +442,9 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_max = 14
 	base_spread = 16
 	big_item_chance = 100
+
+/obj/structure/scrap/vehicle/large/beacon
+	beacon = TRUE
 
 /obj/structure/scrap/food/large
 	name = "large food trash pile"
@@ -442,6 +458,9 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_spread = 16
 	big_item_chance = 50
 
+/obj/structure/scrap/food/large/beacon
+	beacon = TRUE
+
 /obj/structure/scrap/medical/large
 	name = "large medical refuse pile"
 	opacity = TRUE
@@ -453,6 +472,9 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_max = 14
 	base_spread = 16
 	big_item_chance = 60
+
+/obj/structure/scrap/medical/large/beacon
+	beacon = TRUE
 
 /obj/structure/scrap/guns/large
 	name = "large gun refuse pile"
@@ -466,6 +488,9 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_spread = 16
 	big_item_chance = 50
 
+/obj/structure/scrap/guns/large/beacon
+	beacon = TRUE
+
 /obj/structure/scrap/science/large
 	name = "large scientific trash pile"
 	opacity = TRUE
@@ -477,6 +502,9 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_max = 14
 	base_spread = 16
 	big_item_chance = 80
+
+/obj/structure/scrap/science/large/beacon
+	beacon = TRUE
 
 /obj/structure/scrap/cloth/large
 	name = "large cloth pile"
@@ -490,6 +518,9 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_spread = 16
 	big_item_chance = 65
 
+/obj/structure/scrap/cloth/large/beacon
+	beacon = TRUE
+
 /obj/structure/scrap/poor/structure
 	name = "large mixed rubbish"
 	opacity = TRUE
@@ -502,6 +533,8 @@ GLOBAL_LIST_EMPTY(scrap_base_cache)
 	base_max = 6
 	big_item_chance = 100
 
+/obj/structure/scrap/poor/structure/beacon
+	beacon = TRUE
 
 
 /obj/structure/scrap/poor/structure/update_icon() //make big trash icon for this
